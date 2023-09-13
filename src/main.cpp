@@ -36,6 +36,7 @@ int APIENTRY wWinMain(HINSTANCE hInst, HINSTANCE,  PWSTR szCmdLine, int nCmdShow
 
     ShowWindow(hwnd, nCmdShow);
 
+
     MSG msg;
     while (GetMessage(&msg, nullptr, NULL, NULL))
     {
