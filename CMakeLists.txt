@@ -4,7 +4,7 @@ project(WinProj)
 set(ClassesDir src/classes/)
 
 set(Classes 
-    
+    ${ClassesDir}App/App.cpp
 )
 set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} /SUBSYSTEM:WINDOWS")
 add_executable(main src/main.cpp ${Classes})
