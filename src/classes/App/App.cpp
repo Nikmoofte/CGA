@@ -2,8 +2,9 @@
 
 #include <stdexcept>
 #include <memory>
+#include <iostream>
 
-App::App()
+App::App() : box({0, 0, 25, 25})
 {
     try
     {
@@ -14,7 +15,7 @@ App::App()
         wc.lpfnWndProc   = App::appProg;
         wc.hInstance     = GetModuleHandleW(nullptr);
         wc.lpszClassName = className.c_str();
-        wc.hbrBackground = HBRUSH(GetStockObject(BLACK_BRUSH));
+        wc.hbrBackground = HBRUSH(GetStockObject(WHITE_BRUSH));
         wc.lpszMenuName = nullptr;
         wc.style = CS_HREDRAW | CS_VREDRAW;
         
@@ -37,6 +38,7 @@ App::App()
 
         if (!wndHandle)
             throw std::runtime_error{"Failed to create window!"};
+
     }
     catch(const std::exception& e)
     {
@@ -93,26 +95,60 @@ LRESULT App::WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
         {
             PAINTSTRUCT ps;
             HDC hdc = BeginPaint(hwnd, &ps);
-
+            SelectObject(hdc, HBRUSH(GetStockObject(BLACK_BRUSH)));
             // All painting occurs here, between BeginPaint and EndPaint.
 
-            FillRect(hdc, &ps.rcPaint, (HBRUSH) (COLOR_WINDOW+1));
-            TextOut(hdc, 0, 0, "Hello, Windows!", 15);
+
+            box.draw(hdc);
+
+
 
             EndPaint(hwnd, &ps);
-            break;
+            return 0;
+        }
+        case WM_KEYDOWN:
+        {
+            glm::vec2 dir{0.0f};
+
+            if(GetKeyState(VK_UP) < 0)
+                dir.y += 1.0f;
+            if(GetKeyState(VK_DOWN) < 0)
+                dir.y -= 1.0f;
+            if(GetKeyState(VK_LEFT) < 0)
+                dir.x -= 1.0f;
+            if(GetKeyState(VK_RIGHT) < 0)
+                dir.x += 1.0f;
+                
+            box.changeDir(dir);
+            InvalidateRect(hwnd, &box.move(5), true);
+            UpdateWindow(wndHandle);
+            return 0;
+        }
+        case WM_GETMINMAXINFO:
+        {
+            LPMINMAXINFO lpMMI = (LPMINMAXINFO)lParam;
+            lpMMI->ptMinTrackSize.x = 100;
+            lpMMI->ptMinTrackSize.y = 100;
+            return 0;
         }
         case WM_CLOSE:
         {
-            if (MessageBoxW(hwnd, L"Really quit?", L"Confirm", MB_OKCANCEL || MB_ICONQUESTION) == IDOK)
-            {
-                DestroyWindow(hwnd);
-            }
+            // if (MessageBoxW(hwnd, L"Really quit?", L"Confirm", MB_OKCANCEL || MB_ICONQUESTION) == IDOK)
+            // {
+            //     DestroyWindow(hwnd);
+            // }
+            DestroyWindow(hwnd);
             return 0;
         }
         case WM_DESTROY:
         {
             PostQuitMessage(0);
+            return 0;
+        }
+        case WM_SIZE:
+        {
+            appWidht = LOWORD(lParam);
+            appHeight = HIWORD(lParam);
             return 0;
         }
     }

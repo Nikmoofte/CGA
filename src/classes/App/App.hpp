@@ -7,6 +7,8 @@
 #include <string>
 #include <exception>
 
+#include "Box/Box.hpp"
+
 class App
 {
 public:
@@ -22,6 +24,9 @@ private:
     std::wstring className{ L"Lab_1_WNDCLASS" };
     std::wstring lable{ L"lab 1" };
     uint32_t appWidht, appHeight;
+
+    Box box;
+
 };
 
 #endif
