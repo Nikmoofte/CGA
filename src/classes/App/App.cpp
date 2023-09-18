@@ -67,21 +67,21 @@ int App::run()
         if(dur.count() > 1.0f / refrashRate)
         {
             glm::vec2 dir{right - left, up - down};
-
+            
             box.changeDir(dir);
-            auto redrawRect = box.move(baseSpeed);
-            if(redrawRect.top < 0 || 
-                redrawRect.left < 0 || 
-                redrawRect.right > appWidht || 
-                redrawRect.bottom > appHeight)
+            auto redrawRect = box.getRedrawRect(baseSpeed);
+            if(redrawRect.top < 0 || redrawRect.bottom > appHeight)
             {
-                box.move(-baseSpeed);
+                dir.y = -dir.y;
             }
-            else
+            if(redrawRect.left < 0 || redrawRect.right > appWidht)
             {
-                InvalidateRect(wndHandle, &redrawRect, true);
-                UpdateWindow(wndHandle);
+                dir.x = -dir.x;
             }
+            box.changeDir(dir);
+            box.move(baseSpeed);
+            InvalidateRect(wndHandle, &redrawRect, true);
+            UpdateWindow(wndHandle);
             timerStart = std::chrono::system_clock::now();  
         }
     }
@@ -131,7 +131,6 @@ LRESULT App::WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
             FillRect(memDC, &ps.rcPaint, (HBRUSH)GetStockObject(WHITE_BRUSH));
             auto oldBrush = (HBRUSH)SelectObject(memDC, (HBRUSH)GetStockObject(BLACK_BRUSH));
             box.draw(memDC);
-
 
             BitBlt(hdc, ps.rcPaint.left, ps.rcPaint.top, ps.rcPaint.right, ps.rcPaint.bottom, memDC, ps.rcPaint.left, ps.rcPaint.top, SRCCOPY);
 
@@ -193,10 +192,6 @@ LRESULT App::WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
         }
         case WM_CLOSE:
         {
-            // if (MessageBoxW(hwnd, L"Really quit?", L"Confirm", MB_OKCANCEL || MB_ICONQUESTION) == IDOK)
-            // {
-            //     DestroyWindow(hwnd);
-            // }
             DestroyWindow(hwnd);
             return 0;
         }
