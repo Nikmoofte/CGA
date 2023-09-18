@@ -25,7 +25,11 @@ private:
     std::wstring lable{ L"lab 1" };
     uint32_t appWidht, appHeight;
 
+    const int baseSpeed = 1;
+    
     Box box;
+    bool up = false, down = false;
+    bool left = false, right = false;
 
 };
 

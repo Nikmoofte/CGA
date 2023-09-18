@@ -2,7 +2,7 @@
 
 #include <stdexcept>
 #include <memory>
-#include <iostream>
+#include <chrono>
 
 App::App() : box({0, 0, 25, 25})
 {
@@ -15,7 +15,7 @@ App::App() : box({0, 0, 25, 25})
         wc.lpfnWndProc   = App::appProg;
         wc.hInstance     = GetModuleHandleW(nullptr);
         wc.lpszClassName = className.c_str();
-        wc.hbrBackground = HBRUSH(GetStockObject(WHITE_BRUSH));
+        wc.hbrBackground = NULL;
         wc.lpszMenuName = nullptr;
         wc.style = CS_HREDRAW | CS_VREDRAW;
         
@@ -54,9 +54,36 @@ int App::run()
     ShowWindow(wndHandle, SW_SHOW);
     UpdateWindow(wndHandle);
 
-    while(GetMessageW(&msg, nullptr, 0, 0))
+    auto timerStart = std::chrono::system_clock::now();
+    DEVMODEW devMode;
+    EnumDisplaySettingsW(NULL, ENUM_CURRENT_SETTINGS, &devMode);
+    auto refrashRate = devMode.dmDisplayFrequency;
+    while(msg.message != WM_QUIT)
     {
-        DispatchMessageW(&msg);
+        if(PeekMessageW(&msg, nullptr, 0, 0, PM_REMOVE))
+            DispatchMessageW(&msg);
+        
+        std::chrono::duration<float> dur = std::chrono::system_clock::now() - timerStart;
+        if(dur.count() > 1.0f / refrashRate)
+        {
+            glm::vec2 dir{right - left, up - down};
+
+            box.changeDir(dir);
+            auto redrawRect = box.move(baseSpeed);
+            if(redrawRect.top < 0 || 
+                redrawRect.left < 0 || 
+                redrawRect.right > appWidht || 
+                redrawRect.bottom > appHeight)
+            {
+                box.move(-baseSpeed);
+            }
+            else
+            {
+                InvalidateRect(wndHandle, &redrawRect, true);
+                UpdateWindow(wndHandle);
+            }
+            timerStart = std::chrono::system_clock::now();  
+        }
     }
 
     return (int)(msg.wParam);
@@ -91,37 +118,70 @@ LRESULT App::WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
     switch (uMsg)
     {
-        case WM_PAINT:
+        case WM_PAINT:  
         {
             PAINTSTRUCT ps;
             HDC hdc = BeginPaint(hwnd, &ps);
-            SelectObject(hdc, HBRUSH(GetStockObject(BLACK_BRUSH)));
-            // All painting occurs here, between BeginPaint and EndPaint.
+            HDC memDC = CreateCompatibleDC(hdc);
+
+            auto buffer = CreateCompatibleBitmap(hdc, appWidht, appHeight);
+
+            auto oldBuffer = (HBITMAP)SelectObject(memDC, buffer);
+
+            FillRect(memDC, &ps.rcPaint, (HBRUSH)GetStockObject(WHITE_BRUSH));
+            auto oldBrush = (HBRUSH)SelectObject(memDC, (HBRUSH)GetStockObject(BLACK_BRUSH));
+            box.draw(memDC);
 
 
-            box.draw(hdc);
+            BitBlt(hdc, ps.rcPaint.left, ps.rcPaint.top, ps.rcPaint.right, ps.rcPaint.bottom, memDC, ps.rcPaint.left, ps.rcPaint.top, SRCCOPY);
 
+            SelectObject(memDC, oldBuffer);
+            DeleteObject(buffer);
+            DeleteDC(memDC);
 
-
+            SelectObject(hdc, oldBrush);
             EndPaint(hwnd, &ps);
             return 0;
         }
+        break;
         case WM_KEYDOWN:
         {
-            glm::vec2 dir{0.0f};
+            switch (wParam)
+            {
+            case VK_UP:
+                up = true;
+                break;
+            case VK_DOWN:
+                down = true;
+                break;
+            case VK_LEFT:
+                left = true;
+                break;
+            case VK_RIGHT:
+                right = true;
+                break;
+            }
 
-            if(GetKeyState(VK_UP) < 0)
-                dir.y += 1.0f;
-            if(GetKeyState(VK_DOWN) < 0)
-                dir.y -= 1.0f;
-            if(GetKeyState(VK_LEFT) < 0)
-                dir.x -= 1.0f;
-            if(GetKeyState(VK_RIGHT) < 0)
-                dir.x += 1.0f;
-                
-            box.changeDir(dir);
-            InvalidateRect(hwnd, &box.move(5), true);
-            UpdateWindow(wndHandle);
+            return 0;
+        }
+        case WM_KEYUP:
+        {
+            switch (wParam)
+            {
+            case VK_UP:
+                up = false;
+                break;
+            case VK_DOWN:
+                down = false;
+                break;
+            case VK_LEFT:
+                left = false;
+                break;
+            case VK_RIGHT:
+                right = false;
+                break;
+            }
+
             return 0;
         }
         case WM_GETMINMAXINFO:
