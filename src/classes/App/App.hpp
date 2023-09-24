@@ -15,7 +15,6 @@ public:
     explicit App();
 
     int run();
-
 private:
     static LRESULT CALLBACK appProg(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
     LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
@@ -23,9 +22,9 @@ private:
     HWND wndHandle{};
     std::wstring className{ L"Lab_1_WNDCLASS" };
     std::wstring lable{ L"lab 1" };
-    uint32_t appWidht, appHeight;
-
-    const int baseSpeed = 1;
+    long appWidht, appHeight;
+    
+    HDC dc;
     
     Box box;
     bool up = false, down = false;

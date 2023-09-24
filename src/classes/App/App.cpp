@@ -4,7 +4,7 @@
 #include <memory>
 #include <chrono>
 
-App::App() : box({0, 0, 25, 25})
+App::App() : box({0, 0, 50, 50})
 {
     try
     {
@@ -56,8 +56,9 @@ int App::run()
 
     auto timerStart = std::chrono::system_clock::now();
     DEVMODEW devMode;
-    EnumDisplaySettingsW(NULL, ENUM_CURRENT_SETTINGS, &devMode);
-    auto refrashRate = devMode.dmDisplayFrequency;
+    //EnumDisplaySettingsW(NULL, ENUM_CURRENT_SETTINGS, &devMode);
+    //auto refrashRate = devMode.dmDisplayFrequency;
+    auto refrashRate = 60;
     while(msg.message != WM_QUIT)
     {
         if(PeekMessageW(&msg, nullptr, 0, 0, PM_REMOVE))
@@ -68,20 +69,43 @@ int App::run()
         {
             glm::vec2 dir{right - left, up - down};
             
-            box.changeDir(dir);
-            auto redrawRect = box.getRedrawRect(baseSpeed);
-            if(redrawRect.top < 0 || redrawRect.bottom > appHeight)
+            box.accelirateDir(dir * 1.2f);
+            auto redrawRect = box.getRedrawRect();
+
+
+            constexpr static float conterForce = 5.0f;
+            bool wall = false;
+            if(redrawRect.top < 0)
             {
-                dir.y = -dir.y;
+                dir.y = - conterForce;
+                wall = true;
             }
-            if(redrawRect.left < 0 || redrawRect.right > appWidht)
+            if(redrawRect.bottom > appHeight)
             {
-                dir.x = -dir.x;
+                dir.y =  + conterForce;
+                wall = true;
             }
-            box.changeDir(dir);
-            box.move(baseSpeed);
-            InvalidateRect(wndHandle, &redrawRect, true);
-            UpdateWindow(wndHandle);
+            if(redrawRect.left < 0)
+            {
+                dir.x =  + conterForce;
+                wall = true;
+            }
+            if(redrawRect.right > appWidht)
+            {
+                dir.x =  - conterForce;
+                wall = true;
+            }
+            if(wall)
+            {
+                box.accelirateDir(dir * 4.0f);
+                redrawRect = box.getRedrawRect();
+            }
+            box.move();
+
+            RECT screenSpace{0, 0, appWidht, appHeight};
+            FillRect(dc, &screenSpace, (HBRUSH)GetStockObject(WHITE_BRUSH));
+            box.draw(dc);
+
             timerStart = std::chrono::system_clock::now();  
         }
     }
@@ -118,7 +142,11 @@ LRESULT App::WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
     switch (uMsg)
     {
-        case WM_PAINT:  
+        case WM_CREATE:
+            dc = GetDC(hwnd);
+            box.createDC(dc);
+        return 0;
+        /*case WM_PAINT:  
         {
             PAINTSTRUCT ps;
             HDC hdc = BeginPaint(hwnd, &ps);
@@ -142,7 +170,7 @@ LRESULT App::WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
             EndPaint(hwnd, &ps);
             return 0;
         }
-        break;
+        break;*/
         case WM_KEYDOWN:
         {
             switch (wParam)
@@ -197,8 +225,17 @@ LRESULT App::WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
         }
         case WM_DESTROY:
         {
+            ReleaseDC(hwnd, dc);
+            box.releaseDC();
             PostQuitMessage(0);
             return 0;
+        }
+        case WM_SIZING:
+        {
+            RECT* pRect = (RECT*)lParam;
+            appWidht = pRect->right - pRect->left - 15; 
+            appHeight = pRect->bottom - pRect->top - 39;
+            return true;
         }
         case WM_SIZE:
         {
