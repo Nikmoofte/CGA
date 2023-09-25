@@ -41,39 +41,14 @@ void Box::releaseDC()
     DeleteDC(dc);
 }
 
-RECT Box::colide(RECT* borders)
+glm::vec2 Box::colide(RECT* borders)
 {
-    constexpr static float conterForce = 5.0f;
     auto redrawRect = getRedrawRect();
-
-    bool wall = false;
-    if(redrawRect.top < borders->top)
-    {
-        dir.y = - conterForce;
-        wall = true;
-    }
-    if(redrawRect.bottom > borders->bottom)
-    {
-        dir.y =  + conterForce;
-        wall = true;
-    }
-    if(redrawRect.left < borders->left)
-    {
-        dir.x =  + conterForce;
-        wall = true;
-    }
-    if(redrawRect.right > borders->right)
-    {
-        dir.x =  - conterForce;
-        wall = true;
-    }
-    if(wall)
-    {
-        accelirateDir(dir * 4.0f);
-        redrawRect = getRedrawRect();
-    }
-
-    return redrawRect;
+    glm::vec2 conterDir{(redrawRect.left < borders->left) - (redrawRect.right > borders->right),
+                        (redrawRect.bottom > borders->bottom) - (redrawRect.top < borders->top)};
+    if(conterDir.x == 0.0f && conterDir.y == 0.0f)
+        return conterDir;
+    return glm::normalize(conterDir);
 }
 
 void Box::move()
@@ -99,21 +74,14 @@ RECT Box::getRedrawRect()
 {
     glm::vec2 movement = dir;
     movement.y = -movement.y;
-
-    RECT redrawRect = box;
-
-    redrawRect.right += (int)std::max(0.0f, movement.x);
-    redrawRect.left += (int)std::min(0.0f, movement.x);
     
-    redrawRect.top += (int)std::min(0.0f, movement.y);
-    redrawRect.bottom += (int)std::max(0.0f, movement.y);
-    
-    return redrawRect;
+    return getRedrawRect(movement);
 }
 
 RECT Box::getRedrawRect(const glm::vec2 movement)
 {
     RECT redrawRect = box;
+    int Plus = movement.length();
 
     redrawRect.right += std::max(0.0f, movement.x);
     redrawRect.left += std::min(0.0f, movement.x);
@@ -134,7 +102,7 @@ void Box::draw(HDC hdc)
 
     RECT src{0, 0, box.right - box.left, box.bottom - box.top};
 
-    AlphaBlend(hdc, box.left, box.top, box.right, box.bottom, dc, src.left, src.top, src.right, src.bottom, blend);
+    AlphaBlend(hdc, box.left, box.top, src.right, src.bottom, dc, src.left, src.top, src.right, src.bottom, blend);
     //BitBlt(hdc, box.left, box.top, box.right, box.bottom, dc, src.left, src.top, SRCAND);
 }
 

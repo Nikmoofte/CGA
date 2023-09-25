@@ -5,7 +5,7 @@
 #include <chrono>
 #include "PngLoader/PngLoader.hpp"
 
-App::App() : className{ "Lab_1_WNDCLASS" }, lable{ "lab 1" }, box()
+App::App() : className{ "Lab_1_WNDCLASS" }, lable{ "Lab 1" }, box()
 {
     box.resize({0, 0, 50, 50});
     try
@@ -18,7 +18,7 @@ App::App() : className{ "Lab_1_WNDCLASS" }, lable{ "lab 1" }, box()
         lable.c_str(),                  // Window text
         WS_OVERLAPPEDWINDOW,            // Window style
         // Size and position
-        0, 0, 1920, 1080,
+        CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT,
         nullptr,                        // Parent window    
         nullptr,                        // Menu
         GetModuleHandle(nullptr),      // Instance handle
@@ -54,13 +54,13 @@ int App::run()
 
     auto timerStart = std::chrono::system_clock::now();
     //DEVMODEW devMode;
-    //EnumDisplaySettingsW(NULL, ENUM_CURRENT_SETTINGS, &devMode);
+    //EnumDisplaySettings(NULL, ENUM_CURRENT_SETTINGS, &devMode);
     //auto refrashRate = devMode.dmDisplayFrequency;
     auto refrashRate = 60;
     while(msg.message != WM_QUIT)
     {
-        if(PeekMessageW(&msg, nullptr, 0, 0, PM_REMOVE))
-            DispatchMessageW(&msg);
+        if(PeekMessage(&msg, nullptr, 0, 0, PM_REMOVE))
+            DispatchMessage(&msg);
         
         std::chrono::duration<float> dur = std::chrono::system_clock::now() - timerStart;
         if(dur.count() > 1.0f / refrashRate)
@@ -69,22 +69,12 @@ int App::run()
             RECT screenSpace{0, 0, appWidht, appHeight};
             
             box.accelirateDir(dir * 1.2f);
+            auto conterDir = box.colide(&screenSpace);
+            box.accelirateDir(conterDir * glm::max(2.0f,(glm::length(box.getDir())) * 1.5f));
 
-            box.colide(&screenSpace);
             box.move();
 
-            auto memDC = CreateCompatibleDC(dc);
-            auto memBM = CreateCompatibleBitmap(dc, appWidht, appHeight);
-            auto prev = (HBITMAP)SelectObject(memDC, memBM);
-
-            FillRect(memDC, &screenSpace, (HBRUSH)GetStockObject(WHITE_BRUSH));
-            box.draw(memDC);
-
-            BitBlt(dc, 0, 0, appWidht, appHeight, memDC, 0, 0, SRCCOPY);
-
-            SelectObject(memDC, prev);
-            DeleteObject(memBM);
-            DeleteDC(memDC);
+            draw();
 
             timerStart = std::chrono::system_clock::now();  
         }
@@ -100,14 +90,14 @@ LRESULT App::appProg(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
     {
         pApp = (App*)(((CREATESTRUCTW*)lParam)->lpCreateParams);
         SetLastError(0);
-        if(!SetWindowLongPtrW(hwnd, GWLP_USERDATA, (LONG_PTR)pApp))
+        if(!SetWindowLongPtr(hwnd, GWLP_USERDATA, (LONG_PTR)pApp))
         {
             if(GetLastError() != 0)
                 return false;
         }
     }
     else
-        pApp = (App*)GetWindowLongPtrW(hwnd, GWLP_USERDATA);
+        pApp = (App*)GetWindowLongPtr(hwnd, GWLP_USERDATA);
     
     if(pApp)
     {
@@ -126,31 +116,7 @@ LRESULT App::WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
             dc = GetDC(hwnd);
             box.createDC(dc);
         return 0;
-        /*case WM_PAINT:  
-        {
-            PAINTSTRUCT ps;
-            HDC hdc = BeginPaint(hwnd, &ps);
-            HDC memDC = CreateCompatibleDC(hdc);
-
-            auto buffer = CreateCompatibleBitmap(hdc, appWidht, appHeight);
-
-            auto oldBuffer = (HBITMAP)SelectObject(memDC, buffer);
-
-            FillRect(memDC, &ps.rcPaint, (HBRUSH)GetStockObject(WHITE_BRUSH));
-            auto oldBrush = (HBRUSH)SelectObject(memDC, (HBRUSH)GetStockObject(BLACK_BRUSH));
-            box.draw(memDC);
-
-            BitBlt(hdc, ps.rcPaint.left, ps.rcPaint.top, ps.rcPaint.right, ps.rcPaint.bottom, memDC, ps.rcPaint.left, ps.rcPaint.top, SRCCOPY);
-
-            SelectObject(memDC, oldBuffer);
-            DeleteObject(buffer);
-            DeleteDC(memDC);
-
-            SelectObject(hdc, oldBrush);
-            EndPaint(hwnd, &ps);
-            return 0;
-        }
-        break;*/
+        case WM_SYSKEYDOWN:
         case WM_KEYDOWN:
         {
             switch (wParam)
@@ -171,6 +137,7 @@ LRESULT App::WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
             return 0;
         }
+        case WM_SYSKEYUP:
         case WM_KEYUP:
         {
             switch (wParam)
@@ -210,13 +177,13 @@ LRESULT App::WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
             PostQuitMessage(0);
             return 0;
         }
-        case WM_SIZING:
-        {
-            RECT* pRect = (RECT*)lParam;
-            appWidht = pRect->right - pRect->left - 15; 
-            appHeight = pRect->bottom - pRect->top - 39;
-            return true;
-        }
+        // case WM_SIZING:
+        // {
+        //     RECT* pRect = (RECT*)lParam;
+        //     appWidht = pRect->right - pRect->left - 15; 
+        //     appHeight = pRect->bottom - pRect->top - 39;
+        //     return true;
+        // }
         case WM_SIZE:
         {
             appWidht = LOWORD(lParam);
@@ -224,7 +191,7 @@ LRESULT App::WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
             return 0;
         }
     }
-    return DefWindowProcW(hwnd, uMsg, wParam, lParam);
+    return DefWindowProc(hwnd, uMsg, wParam, lParam);
 }
 
 inline void App::registerClass(const CHAR* className)
@@ -242,4 +209,22 @@ inline void App::registerClass(const CHAR* className)
         
         if(!RegisterClassEx(&wc))
             throw std::runtime_error{"Failed to create window class!"};
+}
+
+inline void App::draw()
+{        
+    RECT screenSpace{0, 0, appWidht, appHeight};
+
+    auto memDC = CreateCompatibleDC(dc);
+    auto memBM = CreateCompatibleBitmap(dc, appWidht, appHeight);
+    auto prev = (HBITMAP)SelectObject(memDC, memBM);
+
+    FillRect(memDC, &screenSpace, (HBRUSH)GetStockObject(WHITE_BRUSH));
+    box.draw(memDC);
+
+    BitBlt(dc, 0, 0, appWidht, appHeight, memDC, 0, 0, SRCCOPY);
+
+    SelectObject(memDC, prev);
+    DeleteObject(memBM);
+    DeleteDC(memDC);
 }

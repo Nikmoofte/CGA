@@ -21,6 +21,7 @@ private:
     LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 
     inline void registerClass(const CHAR* className);
+    inline void draw();
 
     HWND wndHandle{};
     std::string className;

@@ -16,7 +16,7 @@ public:
     void createDC(HDC dc);
     void releaseDC();
 
-    RECT colide(RECT* borders);
+    glm::vec2 colide(RECT* borders);
     void move();
 
     RECT getRedrawRect();
