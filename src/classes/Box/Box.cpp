@@ -1,11 +1,32 @@
 #include "Box.hpp"
 
 #include <algorithm>
+#include <stdexcept>
+
+void Box::loadBitMap(HBITMAP bitmap)
+{
+    SelectObject(dc, prevBitmap);
+    DeleteObject(this->bitmap);
+    this->bitmap = bitmap;
+    prevBitmap = (HBITMAP)SelectObject(dc, this->bitmap);
+
+    BITMAP bm;
+    GetObject(bitmap, sizeof(bm), &bm);
+    RECT newSize{0, 0, bm.bmWidth, bm.bmHeight};
+
+    resize(newSize);
+}
+
+void Box::resize(RECT newRect)
+{
+    box = newRect;
+}
 
 void Box::createDC(HDC dc)
 {
     this->dc = CreateCompatibleDC(dc);
-    bitmap = CreateCompatibleBitmap(dc, box.right, box.bottom);
+    if(!bitmap)
+        bitmap = CreateCompatibleBitmap(dc, box.right, box.bottom);
     
     prevBitmap = (HBITMAP)SelectObject(this->dc, bitmap);
     
@@ -18,6 +39,41 @@ void Box::releaseDC()
     SelectObject(dc, prevBitmap);
     DeleteObject(bitmap);
     DeleteDC(dc);
+}
+
+RECT Box::colide(RECT* borders)
+{
+    constexpr static float conterForce = 5.0f;
+    auto redrawRect = getRedrawRect();
+
+    bool wall = false;
+    if(redrawRect.top < borders->top)
+    {
+        dir.y = - conterForce;
+        wall = true;
+    }
+    if(redrawRect.bottom > borders->bottom)
+    {
+        dir.y =  + conterForce;
+        wall = true;
+    }
+    if(redrawRect.left < borders->left)
+    {
+        dir.x =  + conterForce;
+        wall = true;
+    }
+    if(redrawRect.right > borders->right)
+    {
+        dir.x =  - conterForce;
+        wall = true;
+    }
+    if(wall)
+    {
+        accelirateDir(dir * 4.0f);
+        redrawRect = getRedrawRect();
+    }
+
+    return redrawRect;
 }
 
 void Box::move()
@@ -70,7 +126,16 @@ RECT Box::getRedrawRect(const glm::vec2 movement)
 
 void Box::draw(HDC hdc)
 {
-    BitBlt(hdc, box.left, box.top, box.right, box.bottom, dc, 0, 0, SRCCOPY);
+    
+    BLENDFUNCTION blend{0};
+    blend.BlendOp = AC_SRC_OVER;
+    blend.SourceConstantAlpha = BYTE(255);
+    blend.AlphaFormat = AC_SRC_ALPHA;
+
+    RECT src{0, 0, box.right - box.left, box.bottom - box.top};
+
+    AlphaBlend(hdc, box.left, box.top, box.right, box.bottom, dc, src.left, src.top, src.right, src.bottom, blend);
+    //BitBlt(hdc, box.left, box.top, box.right, box.bottom, dc, src.left, src.top, SRCAND);
 }
 
 void Box::changeDir(const glm::vec2& newDir)

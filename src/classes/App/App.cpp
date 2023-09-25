@@ -3,36 +3,25 @@
 #include <stdexcept>
 #include <memory>
 #include <chrono>
+#include "PngLoader/PngLoader.hpp"
 
-App::App() : box({0, 0, 50, 50})
+App::App() : className{ "Lab_1_WNDCLASS" }, lable{ "lab 1" }, box()
 {
+    box.resize({0, 0, 50, 50});
     try
     {
-        WNDCLASSEXW wc = { sizeof(WNDCLASSEXW) };
+        registerClass(className.c_str());
 
-        wc.cbClsExtra = 0;
-        wc.cbWndExtra = 0;
-        wc.lpfnWndProc   = App::appProg;
-        wc.hInstance     = GetModuleHandleW(nullptr);
-        wc.lpszClassName = className.c_str();
-        wc.hbrBackground = NULL;
-        wc.lpszMenuName = nullptr;
-        wc.style = CS_HREDRAW | CS_VREDRAW;
-        
-        if(!RegisterClassExW(&wc))
-            throw std::runtime_error{"Failed to create window class!"};
-
-
-        wndHandle = CreateWindowExW(
+        wndHandle = CreateWindowEx(
         0,                              // Optional window styles.
         className.c_str(),              // Window class
         lable.c_str(),                  // Window text
         WS_OVERLAPPEDWINDOW,            // Window style
         // Size and position
-        CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT,
+        0, 0, 1920, 1080,
         nullptr,                        // Parent window    
         nullptr,                        // Menu
-        wc.hInstance,                   // Instance handle
+        GetModuleHandle(nullptr),      // Instance handle
         this                            // Additional application data
         );
 
@@ -48,6 +37,15 @@ App::App() : box({0, 0, 50, 50})
     
 }
 
+App::App(std::string filePath) : App()
+{
+    PngLoader loader;
+    auto hBM = loader(filePath);
+
+    box.loadBitMap(hBM);
+
+}
+
 int App::run()
 {
     MSG msg{};
@@ -55,7 +53,7 @@ int App::run()
     UpdateWindow(wndHandle);
 
     auto timerStart = std::chrono::system_clock::now();
-    DEVMODEW devMode;
+    //DEVMODEW devMode;
     //EnumDisplaySettingsW(NULL, ENUM_CURRENT_SETTINGS, &devMode);
     //auto refrashRate = devMode.dmDisplayFrequency;
     auto refrashRate = 60;
@@ -68,43 +66,25 @@ int App::run()
         if(dur.count() > 1.0f / refrashRate)
         {
             glm::vec2 dir{right - left, up - down};
+            RECT screenSpace{0, 0, appWidht, appHeight};
             
             box.accelirateDir(dir * 1.2f);
-            auto redrawRect = box.getRedrawRect();
 
-
-            constexpr static float conterForce = 5.0f;
-            bool wall = false;
-            if(redrawRect.top < 0)
-            {
-                dir.y = - conterForce;
-                wall = true;
-            }
-            if(redrawRect.bottom > appHeight)
-            {
-                dir.y =  + conterForce;
-                wall = true;
-            }
-            if(redrawRect.left < 0)
-            {
-                dir.x =  + conterForce;
-                wall = true;
-            }
-            if(redrawRect.right > appWidht)
-            {
-                dir.x =  - conterForce;
-                wall = true;
-            }
-            if(wall)
-            {
-                box.accelirateDir(dir * 4.0f);
-                redrawRect = box.getRedrawRect();
-            }
+            box.colide(&screenSpace);
             box.move();
 
-            RECT screenSpace{0, 0, appWidht, appHeight};
-            FillRect(dc, &screenSpace, (HBRUSH)GetStockObject(WHITE_BRUSH));
-            box.draw(dc);
+            auto memDC = CreateCompatibleDC(dc);
+            auto memBM = CreateCompatibleBitmap(dc, appWidht, appHeight);
+            auto prev = (HBITMAP)SelectObject(memDC, memBM);
+
+            FillRect(memDC, &screenSpace, (HBRUSH)GetStockObject(WHITE_BRUSH));
+            box.draw(memDC);
+
+            BitBlt(dc, 0, 0, appWidht, appHeight, memDC, 0, 0, SRCCOPY);
+
+            SelectObject(memDC, prev);
+            DeleteObject(memBM);
+            DeleteDC(memDC);
 
             timerStart = std::chrono::system_clock::now();  
         }
@@ -245,4 +225,21 @@ LRESULT App::WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
         }
     }
     return DefWindowProcW(hwnd, uMsg, wParam, lParam);
+}
+
+inline void App::registerClass(const CHAR* className)
+{
+     WNDCLASSEX wc = { sizeof(WNDCLASSEX) };
+
+        wc.cbClsExtra = 0;
+        wc.cbWndExtra = 0;
+        wc.lpfnWndProc   = App::appProg;
+        wc.hInstance     = GetModuleHandleW(nullptr);
+        wc.lpszClassName = className;
+        wc.hbrBackground = NULL;
+        wc.lpszMenuName = nullptr;
+        wc.style = CS_HREDRAW | CS_VREDRAW;
+        
+        if(!RegisterClassEx(&wc))
+            throw std::runtime_error{"Failed to create window class!"};
 }
