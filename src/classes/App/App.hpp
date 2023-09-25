@@ -9,6 +9,9 @@
 
 #include "Box/Box.hpp"
 
+// #define SHOW_COLLISION
+
+
 class App
 {
 public:
@@ -21,6 +24,7 @@ private:
     LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 
     inline void registerClass(const CHAR* className);
+    inline void mouseHandle(int xPos, int yPos);
     inline void draw();
 
     HWND wndHandle{};
@@ -33,6 +37,7 @@ private:
     Box box;
     bool up = false, down = false;
     bool left = false, right = false;
+    bool lButtonDown = false;
 
 };
 

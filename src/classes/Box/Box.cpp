@@ -5,7 +5,6 @@
 
 void Box::loadBitMap(HBITMAP bitmap)
 {
-    SelectObject(dc, prevBitmap);
     DeleteObject(this->bitmap);
     this->bitmap = bitmap;
     prevBitmap = (HBITMAP)SelectObject(dc, this->bitmap);
@@ -46,7 +45,7 @@ glm::vec2 Box::colide(RECT* borders)
     auto redrawRect = getRedrawRect();
     glm::vec2 conterDir{(redrawRect.left < borders->left) - (redrawRect.right > borders->right),
                         (redrawRect.bottom > borders->bottom) - (redrawRect.top < borders->top)};
-    if(conterDir.x == 0.0f && conterDir.y == 0.0f)
+    if(conterDir == glm::vec2(0.0f))
         return conterDir;
     return glm::normalize(conterDir);
 }
