@@ -27,7 +27,7 @@ HBITMAP PngLoader::operator()(std::string filePath)
 IStream *PngLoader::createStreamOnFile(LPCTSTR lpName)
 {
     IStream * ipStream = nullptr;
-    HGLOBAL hgblResourceData;
+    HGLOBAL hgblFileData;
     /* auto hrsrc = FindResource(NULL, lpName, lpType);
     // if (hrsrc == NULL)
     //     throw std::runtime_error("Failed to find resource!");
@@ -51,25 +51,25 @@ IStream *PngLoader::createStreamOnFile(LPCTSTR lpName)
 
     try
     {
-        hgblResourceData = GlobalAlloc(GMEM_MOVEABLE, fileSize);
-        if (hgblResourceData == NULL)
+        hgblFileData = GlobalAlloc(GMEM_MOVEABLE, fileSize);
+        if (hgblFileData == NULL)
             throw std::runtime_error("Failed to alloc memmory!");
 
-        auto pvResourceData = GlobalLock(hgblResourceData);
+        auto pvResourceData = GlobalLock(hgblFileData);
         if (pvResourceData == NULL)
             throw std::runtime_error("Failed to lock memory!");
     
         if(!ReadFile(fileHandle, pvResourceData, fileSize, &fileSize, nullptr))
             throw std::runtime_error("Failed to read file!");
 
-        GlobalUnlock(hgblResourceData);
+        GlobalUnlock(hgblFileData);
 
-        if(FAILED(CreateStreamOnHGlobal(hgblResourceData, TRUE, &ipStream)))
+        if(FAILED(CreateStreamOnHGlobal(hgblFileData, TRUE, &ipStream)))
             throw std::runtime_error("Failed to create stream!");
     }
     catch(...)
     {
-        GlobalFree(hgblResourceData);
+        GlobalFree(hgblFileData);
         throw;
     }
 

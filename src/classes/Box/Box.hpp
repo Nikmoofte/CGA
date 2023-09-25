@@ -24,6 +24,7 @@ public:
 
     void draw(HDC hdc);
     void accelirateDir(const glm::vec2& accsDir);
+    void accelerateToPoint(const glm::vec2 &point, float coef);
     const glm::vec2& getDir();
 private:
     void changeDir(const glm::vec2& newDir);

@@ -117,6 +117,21 @@ void Box::accelirateDir(const glm::vec2& accsDir)
     
 }
 
+void Box::accelerateToPoint(const glm::vec2 &point, float coef)
+{
+    SIZE boxSize{box.right - box.left, box.bottom - box.top};
+    glm::vec2 center{
+        box.left + (boxSize.cx >> 1),
+        box.top + (boxSize.cy >> 1)
+        };
+
+    auto dir = point - center;
+    dir = dir == glm::vec2(0.0f) ? dir : glm::normalize(dir);
+    dir.y = -dir.y; 
+
+    accelirateDir(dir * coef);
+}
+
 const glm::vec2 &Box::getDir()
 {
     return dir;

@@ -72,11 +72,11 @@ int App::run()
                 GetCursorPos(&pos);
                 ScreenToClient(wndHandle, &pos);
                 auto boxRect = box.getRedrawRect();
-                if(pos.x > boxRect.left &&
-                   pos.x < boxRect.right &&
-                   pos.y > boxRect.top &&
-                   pos.y < boxRect.bottom)
-                    mouseHandle(pos.x, pos.y);
+                // if(pos.x > boxRect.left &&
+                //    pos.x < boxRect.right &&
+                //    pos.y > boxRect.top &&
+                //    pos.y < boxRect.bottom)
+                    box.accelerateToPoint({pos.x, pos.y}, 4.f);
             }
 
             glm::vec2 dir{right - left, up - down};
@@ -186,11 +186,13 @@ LRESULT App::WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
         case WM_LBUTTONDOWN:
         {
             lButtonDown = true;
+            SetCapture(hwnd);
             return 0;
         }
         case WM_LBUTTONUP:
         {
             lButtonDown = false;
+            ReleaseCapture();
             return 0;
         }
         case WM_GETMINMAXINFO:
