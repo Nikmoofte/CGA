@@ -5,8 +5,6 @@
 #define DEBUG
 
 #include "App/App.hpp"
-#include "PngLoader/PngLoader.hpp"
-
 
 int APIENTRY WinMain(HINSTANCE hInst, HINSTANCE,  LPSTR szCmdLine, int nCmdShow)
 {
