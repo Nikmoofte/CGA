@@ -4,13 +4,17 @@
 #include <memory>
 #include <chrono>
 #include <Windowsx.h>
-
 #include <glm/glm.hpp>
+
+#include "ObjParser/ObjParser.hpp"
 
 App::App() : className{ "Lab_1_WNDCLASS" }, lable{ "Lab 1" }
 {
     try
     {
+        Gdiplus::GdiplusStartupInput gdiplusStartupInput;
+
+        Gdiplus::GdiplusStartup(&gdiplusToken, &gdiplusStartupInput, NULL);
         registerClass(className.c_str());
 
         wndHandle = CreateWindowEx(
@@ -40,8 +44,7 @@ App::App() : className{ "Lab_1_WNDCLASS" }, lable{ "Lab 1" }
 
 App::App(std::string filePath) : App()
 {
-
-
+    //obj = ObjParser{}(filePath);
 }
 
 int App::run()
@@ -67,7 +70,7 @@ int App::run()
             timerStart = std::chrono::system_clock::now();  
         }
     }
-
+    Gdiplus::GdiplusShutdown(gdiplusToken);
     return (int)(msg.wParam);
 }
 
@@ -150,20 +153,41 @@ inline void App::registerClass(const CHAR* className)
 
 inline void App::draw()
 {        
-    RECT screenSpace{0, 0, appWidht, appHeight};
+    //DRAW
+        Gdiplus::Graphics graphics(dc);
 
-    auto memDC = CreateCompatibleDC(dc);
-    auto memBM = CreateCompatibleBitmap(dc, appWidht, appHeight);
-    auto prev = (HBITMAP)SelectObject(memDC, memBM);
+        Gdiplus::Bitmap bitmap(appWidht, appHeight, PixelFormat32bppRGB);
+        std::chrono::duration<double> time = std::chrono::system_clock::now() - appStart;
+        Brezenhem(bitmap, { appWidht / 2 - sin(time.count()) * 100, appHeight / 2 }, { appWidht / 2 + sin(time.count()) * 100, appHeight / 2 }, Gdiplus::Color{ 255, 0, 0 });
 
-    FillRect(memDC, &screenSpace, (HBRUSH)GetStockObject(WHITE_BRUSH));
-//DRAW
+        graphics.DrawImage(&bitmap, 0, 0);
 
 
-//STOP DRAW
-    BitBlt(dc, 0, 0, appWidht, appHeight, memDC, 0, 0, SRCCOPY);
+    //STOP DRAW
+}
 
-    SelectObject(memDC, prev);
-    DeleteObject(memBM);
-    DeleteDC(memDC);
+inline void App::Brezenhem(Gdiplus::Bitmap& bitmap, glm::ivec2 start, glm::ivec2 end, const Gdiplus::Color& color)
+{
+    int dx = abs(end.x - start.x);
+    int dy = abs(end.y - start.y);
+    int sx = (end.x < start.x) ? -1 : 1;
+    int sy = (end.y < start.y) ? -1 : 1;
+    int err = dx - dy;
+
+    while (start.x != end.x || start.y != end.y)
+    {
+        bitmap.SetPixel(start.x, start.y, color);
+
+        int e2 = err << 1;
+        if (e2 > -dy)
+        {
+            err -= dy;
+            start.x += sx;
+        }
+        if (e2 < dx)
+        {
+            err += dx;
+            start.y += sy;
+        }
+    }
 }

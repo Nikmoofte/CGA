@@ -9,7 +9,7 @@
 int APIENTRY WinMain(HINSTANCE hInst, HINSTANCE,  LPSTR szCmdLine, int nCmdShow)
 {
 #ifdef DEBUG
-    App app{"../../src/assets/biggerDog.png"};
+    App app{"../src/assets/Chariot.obj"};
 #else
     std::string cmd{szCmdLine};
     App app{cmd.c_str()};

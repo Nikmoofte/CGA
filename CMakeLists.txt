@@ -7,14 +7,16 @@ set(Dependencies deps/)
 
 set(Classes 
     ${ClassesDir}App/App.cpp
+    ${ClassesDir}ObjParser/ObjParser.cpp
+    ${ClassesDir}Object/Object.cpp
 )
-set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} /SUBSYSTEM:WINDOWS")
-add_executable(main src/main.cpp ${Classes})
+add_executable(main WIN32 src/main.cpp ${Classes})
 
 add_subdirectory(deps/glm)
 target_link_libraries(main PUBLIC glm)
 target_link_libraries(main PUBLIC windowscodecs)
 target_link_libraries(main PUBLIC Msimg32)
+target_link_libraries(main PUBLIC Gdiplus)
 
 target_include_directories(main PUBLIC ${ClassesDir})
 target_include_directories(main PUBLIC ${AssetsDir})
