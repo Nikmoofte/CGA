@@ -20,9 +20,10 @@ public:
     void addFace(const std::array<std::tuple<size_t, size_t, size_t>, 3>& face);
 
     constexpr static size_t NONE = static_cast<size_t>(-1);
+    friend class App;
 private:
 
-    std::vector<glm::vec4> verticies;
+    std::vector<glm::vec4> vertices;
     std::vector<glm::vec3> normals;
     std::vector<glm::vec3> textures;
     std::vector<std::array<std::tuple<size_t, size_t, size_t>, 3>> faces;

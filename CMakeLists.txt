@@ -9,6 +9,7 @@ set(Classes
     ${ClassesDir}App/App.cpp
     ${ClassesDir}ObjParser/ObjParser.cpp
     ${ClassesDir}Object/Object.cpp
+    ${ClassesDir}Camera/Camera.cpp
 )
 add_executable(main WIN32 src/main.cpp ${Classes})
 

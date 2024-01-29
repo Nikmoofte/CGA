@@ -5,6 +5,7 @@
 #include <chrono>
 #include <Windowsx.h>
 #include <glm/glm.hpp>
+#include <mutex>
 
 #include "ObjParser/ObjParser.hpp"
 
@@ -44,7 +45,7 @@ App::App() : className{ "Lab_1_WNDCLASS" }, lable{ "Lab 1" }
 
 App::App(std::string filePath) : App()
 {
-    //obj = ObjParser{}(filePath);
+    obj = ObjParser{}(filePath);
 }
 
 int App::run()
@@ -61,14 +62,19 @@ int App::run()
     {
         if(PeekMessage(&msg, nullptr, 0, 0, PM_REMOVE))
             DispatchMessage(&msg);
+
+        camera.KeyboardControl();
+        if(rmdown)
+            camera.MouseControl();
         
         std::chrono::duration<float> dur = std::chrono::system_clock::now() - timerStart;
         if(dur.count() > 1.0f / refrashRate)
-        {
+        {   
             draw();
-
             timerStart = std::chrono::system_clock::now();  
         }
+
+        
     }
     Gdiplus::GdiplusShutdown(gdiplusToken);
     return (int)(msg.wParam);
@@ -113,6 +119,26 @@ LRESULT App::WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
             lpMMI->ptMinTrackSize.y = 200L;
             return 0;
         }
+        case WM_KEYDOWN:
+        {
+            switch(wParam)
+            {
+                case VK_ESCAPE:
+                    PostQuitMessage(0);
+                    return 0;
+            }
+            return 0;
+        }
+        case WM_RBUTTONDOWN:
+        {   
+            rmdown = true;
+            return 0;
+        }
+        case WM_RBUTTONUP:
+        {
+            rmdown = false;
+            return 0;
+        }
         case WM_CLOSE:
         {
             DestroyWindow(hwnd);
@@ -128,6 +154,7 @@ LRESULT App::WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
         {
             appWidht = LOWORD(lParam);
             appHeight = HIWORD(lParam);
+            camera.ChangeView(appWidht, appHeight);
             return 0;
         }
     }
@@ -154,28 +181,74 @@ inline void App::registerClass(const CHAR* className)
 inline void App::draw()
 {        
     //DRAW
-        Gdiplus::Graphics graphics(dc);
 
-        Gdiplus::Bitmap bitmap(appWidht, appHeight, PixelFormat32bppRGB);
-        std::chrono::duration<double> time = std::chrono::system_clock::now() - appStart;
-        Brezenhem(bitmap, { appWidht / 2 - sin(time.count()) * 100, appHeight / 2 }, { appWidht / 2 + sin(time.count()) * 100, appHeight / 2 }, Gdiplus::Color{ 255, 0, 0 });
+    Gdiplus::Graphics graphics(dc);
 
-        graphics.DrawImage(&bitmap, 0, 0);
+    Gdiplus::Bitmap bitmap(appWidht, appHeight, PixelFormat32bppRGB);
+    std::chrono::duration<double> time = std::chrono::system_clock::now() - appStart;
+    auto view = camera.GetViewMat();
+    auto proj = camera.GetProjMat();
+    glm::mat4 model = glm::mat4(1.0f);
+    glm::mat4 mvp = camera.GetViewportMat() * proj * view * model;
+
+    size_t facesNum = obj.faces.size();
+    size_t threadFacesNum = facesNum / threads.size();
+    for(int i = 0; i < threads.size(); ++i)
+    {
+        threads[i] = std::thread([&, i, facesNum, threadFacesNum]()
+        {
+            for(size_t j = i * threadFacesNum; j < (i + 1) * threadFacesNum; ++j)
+            {
+                auto face = obj.faces[j];
+                size_t vertNum = face.size();
+        
+                for(int j = 0; j < vertNum; ++j)
+                {
+                    size_t currInd = std::get<0>(face[j]);
+                    size_t nextInd = std::get<0>(face[(j + 1) % vertNum]);
+
+                    glm::vec4 currVert = mvp * obj.vertices[currInd];
+                    glm::vec4 nextVert = mvp * obj.vertices[nextInd];
+                    currVert /= currVert.w;
+                    nextVert /= nextVert.w;
+
+
+                    Brezenhem(
+                        bitmap, 
+                        currVert,
+                        nextVert,
+                        Gdiplus::Color(255, 255, 255)
+                    );
+                }
+            }
+            
+        }
+        );
+
+    }
+
+    for(auto& thread : threads)
+        thread.join();
+        
+    graphics.DrawImage(&bitmap, 0, 0);
 
 
     //STOP DRAW
 }
 
+
+std::mutex g_pages_mutex;
 inline void App::Brezenhem(Gdiplus::Bitmap& bitmap, glm::ivec2 start, glm::ivec2 end, const Gdiplus::Color& color)
 {
-    int dx = abs(end.x - start.x);
-    int dy = abs(end.y - start.y);
-    int sx = (end.x < start.x) ? -1 : 1;
-    int sy = (end.y < start.y) ? -1 : 1;
+    int dx = std::max(abs(end.x - start.x), 1);
+    int dy = std::max(abs(end.y - start.y), 1);
+    int sx = (end.x - start.x) / dx;
+    int sy = (end.y - start.y) / dy;
     int err = dx - dy;
 
     while (start.x != end.x || start.y != end.y)
     {
+        //std::lock_guard<std::mutex> guard(g_pages_mutex);
         bitmap.SetPixel(start.x, start.y, color);
 
         int e2 = err << 1;

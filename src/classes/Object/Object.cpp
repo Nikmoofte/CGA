@@ -2,12 +2,12 @@
 
 void Object::addVertex(const glm::vec4& vertex)
 {
-    verticies.push_back(vertex);
+    vertices.push_back(vertex);
 }
 
 void Object::addVertex(glm::vec4 &&vertex)
 {
-    verticies.push_back(std::move(vertex));
+    vertices.push_back(std::move(vertex));
 }
 
 void Object::addNormal(const glm::vec3& normal)
