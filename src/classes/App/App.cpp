@@ -199,7 +199,7 @@ inline void App::draw()
         {
             for(size_t j = i * threadFacesNum; j < (i + 1) * threadFacesNum; ++j)
             {
-                auto face = obj.faces[j];
+                auto& face = obj.faces[j];
                 size_t vertNum = face.size();
         
                 for(int j = 0; j < vertNum; ++j)
@@ -248,8 +248,10 @@ inline void App::Brezenhem(Gdiplus::Bitmap& bitmap, glm::ivec2 start, glm::ivec2
 
     while (start.x != end.x || start.y != end.y)
     {
-        //std::lock_guard<std::mutex> guard(g_pages_mutex);
-        bitmap.SetPixel(start.x, start.y, color);
+        {
+            std::lock_guard<std::mutex> guard(g_pages_mutex);
+            bitmap.SetPixel(start.x, start.y, color);
+        }
 
         int e2 = err << 1;
         if (e2 > -dy)

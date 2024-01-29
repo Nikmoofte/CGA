@@ -12,18 +12,18 @@ Camera::Camera(const glm::vec3& vPos, uint16_t uScreenWidth, uint16_t uScreenHei
 	ChangeView(uScreenWidth, uScreenHeight);
 }
 
-void Camera::ChangeView(uint16_t uScreenWidth, uint16_t uSreenHeight)
+void Camera::ChangeView(uint16_t uScreenWidth, uint16_t uScreenHeight)
 {
 	this->uScreenHeight = uScreenHeight;
 	this->uScreenWidth = uScreenWidth;
 	halfHeight = uScreenHeight / 2;
 	halfWidth = uScreenWidth / 2;
-	proj = glm::perspective(glm::radians(45.f), static_cast<float>(uScreenWidth) / uScreenHeight, 0.1f, 100.0f);
+	proj = glm::perspective(glm::radians(90.f), static_cast<float>(uScreenWidth) / uScreenHeight, 0.1f, 100.0f);
 	viewport = glm::mat4(
-		halfWidth,  0, 			0, 0,
+		halfWidth,  0, 			 0, 0,
 		0, 		    -halfHeight, 0, 0,
-		0, 			0, 			1, 0,
-		halfWidth,  uScreenHeight, 0, 1
+		0, 			0, 			 1, 0,
+		halfWidth,  halfHeight,  0, 1
 	);
 	view = lookAt(CameraPos, CameraPos + CameraFront, CameraUp);
 }
