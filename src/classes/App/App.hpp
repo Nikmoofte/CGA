@@ -2,7 +2,6 @@
 #define APP_HPP
 
 #include <Windows.h>
-
 #include <cstdint>
 #include <string>
 #include <exception>
@@ -30,14 +29,14 @@ private:
     inline void registerClass(const CHAR* className);
     inline void draw();
 
-    inline void Brezenhem(Gdiplus::Bitmap&, glm::ivec2, glm::ivec2, const Gdiplus::Color&);
+    inline void Brezenhem(std::vector<DWORD32>&, glm::ivec2, glm::ivec2, const Gdiplus::Color&);
 
 
     std::chrono::system_clock::time_point appStart = std::chrono::system_clock::now();
     HWND wndHandle{};
     std::string className;
     std::string lable;
-    long appWidht, appHeight;
+    size_t appWidht, appHeight;
 
     Camera camera{glm::vec3(-10.0f, 0.0f, 0.0f), 1920, 1080};
     

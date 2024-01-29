@@ -4,7 +4,6 @@
 #include <memory>
 #include <chrono>
 #include <Windowsx.h>
-#include <glm/glm.hpp>
 #include <mutex>
 
 #include "ObjParser/ObjParser.hpp"
@@ -180,11 +179,26 @@ inline void App::registerClass(const CHAR* className)
 
 inline void App::draw()
 {        
+    RECT screenSpace{0, 0, (LONG)appWidht, (LONG)appHeight};
+
+    auto memDC = CreateCompatibleDC(dc);
+    auto memBM = CreateCompatibleBitmap(dc, appWidht, appHeight);
+    auto prev = (HBITMAP)SelectObject(memDC, memBM);
+
+    BITMAPINFO bitmapInfo{};
+    bitmapInfo.bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
+    bitmapInfo.bmiHeader.biWidth = appWidht;
+    bitmapInfo.bmiHeader.biHeight = -appHeight;
+    bitmapInfo.bmiHeader.biPlanes = 1;
+    bitmapInfo.bmiHeader.biBitCount = 32;
+    bitmapInfo.bmiHeader.biCompression = BI_RGB;
+
+    std::vector<DWORD32> bitmapData;
+    bitmapData.resize(appWidht * appHeight);
+
+    GetDIBits(memDC, memBM, 0, appHeight, &bitmapData.front(), &bitmapInfo, DIB_RGB_COLORS);
+    
     //DRAW
-
-    Gdiplus::Graphics graphics(dc);
-
-    Gdiplus::Bitmap bitmap(appWidht, appHeight, PixelFormat32bppRGB);
     std::chrono::duration<double> time = std::chrono::system_clock::now() - appStart;
     auto view = camera.GetViewMat();
     auto proj = camera.GetProjMat();
@@ -214,7 +228,7 @@ inline void App::draw()
 
 
                     Brezenhem(
-                        bitmap, 
+                        bitmapData, 
                         currVert,
                         nextVert,
                         Gdiplus::Color(255, 255, 255)
@@ -229,8 +243,13 @@ inline void App::draw()
 
     for(auto& thread : threads)
         thread.join();
-        
-    graphics.DrawImage(&bitmap, 0, 0);
+    
+    SetDIBits(memDC, memBM, 0, appHeight, &bitmapData.front(), &bitmapInfo, DIB_RGB_COLORS);
+    BitBlt(dc, 0, 0, appWidht, appHeight, memDC, 0, 0, SRCCOPY);
+
+    SelectObject(memDC, prev);
+    DeleteObject(memBM);
+    DeleteDC(memDC);
 
 
     //STOP DRAW
@@ -238,20 +257,25 @@ inline void App::draw()
 
 
 std::mutex g_pages_mutex;
-inline void App::Brezenhem(Gdiplus::Bitmap& bitmap, glm::ivec2 start, glm::ivec2 end, const Gdiplus::Color& color)
+inline void App::Brezenhem(std::vector<DWORD32>& bitmap, glm::ivec2 start, glm::ivec2 end, const Gdiplus::Color& color)
 {
+    if(start.x < 0 || start.x >= appWidht || start.y < 0 || start.y >= appHeight)
+        return;
+    if(end.x < 0 || end.x >= appWidht || end.y < 0 || end.y >= appHeight)
+        return;
+
+
     int dx = std::max(abs(end.x - start.x), 1);
     int dy = std::max(abs(end.y - start.y), 1);
     int sx = (end.x - start.x) / dx;
     int sy = (end.y - start.y) / dy;
     int err = dx - dy;
-
+    
     while (start.x != end.x || start.y != end.y)
     {
-        {
-            std::lock_guard<std::mutex> guard(g_pages_mutex);
-            bitmap.SetPixel(start.x, start.y, color);
-        }
+        //std::lock_guard<std::mutex> guard(g_pages_mutex);
+        bitmap[start.y * appWidht + start.x] = color.GetValue();
+
 
         int e2 = err << 1;
         if (e2 > -dy)

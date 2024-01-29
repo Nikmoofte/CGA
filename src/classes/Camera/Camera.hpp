@@ -1,4 +1,5 @@
 #pragma once
+
 #include <glm/glm.hpp>
 #include <glm/gtc/type_ptr.hpp>
 #include <glm/gtc/matrix_transform.hpp>
@@ -16,7 +17,6 @@ public:
 	void MouseControl();
 	void KeyboardControl();
 	void ChangeView(uint16_t uScreenWidth, uint16_t uSreenHeight);
-	void ChangeProgramID();
 	void SetPos(const glm::vec3& vNewPos);
 	const glm::mat4& GetProjMat() const;
 	const glm::mat4& GetViewMat() const;

@@ -5,6 +5,11 @@ set(ClassesDir src/classes/)
 set(AssetsDir src/assets/)
 set(Dependencies deps/)
 
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-c++98-compat")
+
+set(CMAKE_CXX_STANDARD 23)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
 set(Classes 
     ${ClassesDir}App/App.cpp
     ${ClassesDir}ObjParser/ObjParser.cpp
@@ -12,6 +17,7 @@ set(Classes
     ${ClassesDir}Camera/Camera.cpp
 )
 add_executable(main WIN32 src/main.cpp ${Classes})
+
 
 add_subdirectory(deps/glm)
 target_link_libraries(main PUBLIC glm)
