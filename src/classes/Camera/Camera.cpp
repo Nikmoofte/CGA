@@ -18,13 +18,20 @@ void Camera::ChangeView(uint16_t uScreenWidth, uint16_t uScreenHeight)
 	this->uScreenWidth = uScreenWidth;
 	halfHeight = uScreenHeight / 2;
 	halfWidth = uScreenWidth / 2;
-	proj = glm::perspective(glm::radians(90.f), static_cast<float>(uScreenWidth) / uScreenHeight, 0.1f, 100.0f);
+	proj = glm::perspective(glm::radians(60.f), static_cast<float>(uScreenWidth) / uScreenHeight, 0.1f, 100.0f);
+	
 	viewport = glm::mat4(
 		halfWidth,  0, 			 0, 0,
 		0, 		    -halfHeight, 0, 0,
 		0, 			0, 			 1, 0,
 		halfWidth,  halfHeight,  0, 1
 	);
+
+	view = lookAt(CameraPos, CameraPos + CameraFront, CameraUp);
+}
+
+void Camera::RecalcView()
+{
 	view = lookAt(CameraPos, CameraPos + CameraFront, CameraUp);
 }
 
@@ -71,7 +78,6 @@ void Camera::MouseControl()
 	direction.z = sin(fYaw) * cos(fPitch);
 
 	CameraFront = normalize(direction);
-	view = lookAt(CameraPos, CameraPos + CameraFront, CameraUp);
 }
 
 void Camera::SetPos(const glm::vec3 &vNewPos)
@@ -101,10 +107,10 @@ const glm::vec3 &Camera::GetPos() const
 
 void Camera::KeyboardControl()
 {
-	float fSpeed = 0.0001f;
+	float fSpeed = 1.0f;
 
 	if (GetKeyState(VK_SHIFT) & 0x8000)
-		fSpeed = 0.0005f;
+		fSpeed = 5.0f;
 
 	float fMovSpeed = fSpeed;
 

@@ -17,6 +17,7 @@ public:
 	void MouseControl();
 	void KeyboardControl();
 	void ChangeView(uint16_t uScreenWidth, uint16_t uSreenHeight);
+	void RecalcView();
 	void SetPos(const glm::vec3& vNewPos);
 	const glm::mat4& GetProjMat() const;
 	const glm::mat4& GetViewMat() const;

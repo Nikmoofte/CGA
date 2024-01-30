@@ -19,7 +19,6 @@
 Object ObjParser::operator()(const std::string &pathToFile)
 {
     using namespace std;
-
 #ifdef TIMER
     auto beg = chrono::high_resolution_clock::now();
 #endif

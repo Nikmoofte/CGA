@@ -9,10 +9,11 @@
 int APIENTRY WinMain(HINSTANCE hInst, HINSTANCE,  LPSTR szCmdLine, int nCmdShow)
 {
 #ifdef DEBUG
-    App app{"../src/assets/Chariot.obj"};
+    App app{"../src/assets/Cube.obj"};
 #else
     std::string cmd{szCmdLine};
-    App app{cmd.c_str()};
+    
+    App app{cmd.substr(1, cmd.size() - 2)};
 #endif
     return app.run();
 }

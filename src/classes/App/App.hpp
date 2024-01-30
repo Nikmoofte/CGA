@@ -19,7 +19,7 @@ class App
 {
 public:
     explicit App();
-    explicit App(std::string filePath);
+    explicit App(const std::string& filePath);
 
     int run();
 private:
@@ -43,7 +43,6 @@ private:
     std::vector<std::thread> threads{std::thread::hardware_concurrency()};
 
     bool rmdown = false;
-    ULONG_PTR gdiplusToken;
     Object obj;
     HDC dc;
 };

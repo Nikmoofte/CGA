@@ -4,7 +4,6 @@
 #include <memory>
 #include <chrono>
 #include <Windowsx.h>
-#include <mutex>
 
 #include "ObjParser/ObjParser.hpp"
 
@@ -12,9 +11,6 @@ App::App() : className{ "Lab_1_WNDCLASS" }, lable{ "Lab 1" }
 {
     try
     {
-        Gdiplus::GdiplusStartupInput gdiplusStartupInput;
-
-        Gdiplus::GdiplusStartup(&gdiplusToken, &gdiplusStartupInput, NULL);
         registerClass(className.c_str());
 
         wndHandle = CreateWindowEx(
@@ -42,7 +38,7 @@ App::App() : className{ "Lab_1_WNDCLASS" }, lable{ "Lab 1" }
     
 }
 
-App::App(std::string filePath) : App()
+App::App(const std::string& filePath) : App()
 {
     obj = ObjParser{}(filePath);
 }
@@ -59,23 +55,23 @@ int App::run()
     auto refrashRate = devMode.dmDisplayFrequency;
     while(msg.message != WM_QUIT)
     {
+        timerStart = std::chrono::system_clock::now();  
         if(PeekMessage(&msg, nullptr, 0, 0, PM_REMOVE))
             DispatchMessage(&msg);
 
         camera.KeyboardControl();
         if(rmdown)
             camera.MouseControl();
+        camera.RecalcView();
         
-        std::chrono::duration<float> dur = std::chrono::system_clock::now() - timerStart;
-        if(dur.count() > 1.0f / refrashRate)
-        {   
+        // {   
             draw();
-            timerStart = std::chrono::system_clock::now();  
-        }
+        // }
 
         
+        std::chrono::duration<double> dur = std::chrono::system_clock::now() - timerStart;
+        SetWindowText(wndHandle, std::to_string(int(1 / dur.count())).c_str());
     }
-    Gdiplus::GdiplusShutdown(gdiplusToken);
     return (int)(msg.wParam);
 }
 
@@ -176,15 +172,15 @@ inline void App::registerClass(const CHAR* className)
         if(!RegisterClassEx(&wc))
             throw std::runtime_error{"Failed to create window class!"};
 }
-
 inline void App::draw()
 {        
     RECT screenSpace{0, 0, (LONG)appWidht, (LONG)appHeight};
 
     auto memDC = CreateCompatibleDC(dc);
     auto memBM = CreateCompatibleBitmap(dc, appWidht, appHeight);
-    auto prev = (HBITMAP)SelectObject(memDC, memBM);
+    auto prev = SelectObject(memDC, memBM);
 
+    
     BITMAPINFO bitmapInfo{};
     bitmapInfo.bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
     bitmapInfo.bmiHeader.biWidth = appWidht;
@@ -195,9 +191,6 @@ inline void App::draw()
 
     std::vector<DWORD32> bitmapData;
     bitmapData.resize(appWidht * appHeight);
-
-    GetDIBits(memDC, memBM, 0, appHeight, &bitmapData.front(), &bitmapInfo, DIB_RGB_COLORS);
-    
     //DRAW
     std::chrono::duration<double> time = std::chrono::system_clock::now() - appStart;
     auto view = camera.GetViewMat();
@@ -246,17 +239,14 @@ inline void App::draw()
     
     SetDIBits(memDC, memBM, 0, appHeight, &bitmapData.front(), &bitmapInfo, DIB_RGB_COLORS);
     BitBlt(dc, 0, 0, appWidht, appHeight, memDC, 0, 0, SRCCOPY);
-
-    SelectObject(memDC, prev);
+    
     DeleteObject(memBM);
     DeleteDC(memDC);
-
 
     //STOP DRAW
 }
 
 
-std::mutex g_pages_mutex;
 inline void App::Brezenhem(std::vector<DWORD32>& bitmap, glm::ivec2 start, glm::ivec2 end, const Gdiplus::Color& color)
 {
     if(start.x < 0 || start.x >= appWidht || start.y < 0 || start.y >= appHeight)
