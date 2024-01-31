@@ -6,6 +6,8 @@ set(AssetsDir src/assets/)
 set(Dependencies deps/)
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-c++98-compat")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -mavx512vl")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Ofast")
 
 set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -15,15 +17,25 @@ set(Classes
     ${ClassesDir}ObjParser/ObjParser.cpp
     ${ClassesDir}Object/Object.cpp
     ${ClassesDir}Camera/Camera.cpp
+    ${ClassesDir}Renderer/Renderer.cpp
+    ${ClassesDir}ShaderProg/ShaderProg.cpp
+    ${ClassesDir}Shader/Shader.cpp
+    ${ClassesDir}Shader/ShaderType.cpp
+    ${ClassesDir}VBO/VBO.cpp
+    ${ClassesDir}VAO/VAO.cpp
+    ${ClassesDir}EBO/EBO.cpp
+    ${ClassesDir}VAO/VBLayout.cpp
 )
-add_executable(main WIN32 src/main.cpp ${Classes})
+add_executable(main src/main.cpp src/glad.c ${Classes})
 
 
 add_subdirectory(deps/glm)
+add_subdirectory(deps/glfw)
 target_link_libraries(main PUBLIC glm)
-target_link_libraries(main PUBLIC windowscodecs)
-target_link_libraries(main PUBLIC Msimg32)
-target_link_libraries(main PUBLIC Gdiplus)
+target_link_libraries(main PUBLIC glfw)
+target_link_libraries(main PUBLIC opengl32)
+
 
 target_include_directories(main PUBLIC ${ClassesDir})
 target_include_directories(main PUBLIC ${AssetsDir})
+target_include_directories(main PUBLIC include)

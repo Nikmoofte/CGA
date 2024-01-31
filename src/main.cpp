@@ -1,4 +1,3 @@
-#include <Windows.h>
 #include <iostream>
 #include <string>
 
@@ -6,14 +5,18 @@
 
 #include "App/App.hpp"
 
-int APIENTRY WinMain(HINSTANCE hInst, HINSTANCE,  LPSTR szCmdLine, int nCmdShow)
+int main(int argc, char* argv[])
 {
-#ifdef DEBUG
-    App app{"../src/assets/Cube.obj"};
-#else
-    std::string cmd{szCmdLine};
-    
-    App app{cmd.substr(1, cmd.size() - 2)};
-#endif
-    return app.run();
+    if(argc <= 1)
+    {
+        App app{"../assets/Chariot.obj"};
+        return app.run();
+    }
+    else
+    {
+        std::string cmd{argv[1]};
+        App app{cmd};   
+        return app.run();
+    }
+
 }

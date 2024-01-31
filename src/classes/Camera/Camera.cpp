@@ -2,8 +2,7 @@
 
 #include <chrono>
 #include <iostream>
-#include <Windows.h>
-
+#include <GLFW/glfw3.h>
 extern unsigned RenderDist;
 
 Camera::Camera(const glm::vec3& vPos, uint16_t uScreenWidth, uint16_t uScreenHeight)
@@ -27,7 +26,6 @@ void Camera::ChangeView(uint16_t uScreenWidth, uint16_t uScreenHeight)
 		halfWidth,  halfHeight,  0, 1
 	);
 
-	view = lookAt(CameraPos, CameraPos + CameraFront, CameraUp);
 }
 
 void Camera::RecalcView()
@@ -35,29 +33,27 @@ void Camera::RecalcView()
 	view = lookAt(CameraPos, CameraPos + CameraFront, CameraUp);
 }
 
-void Camera::MouseControl()
+void Camera::MouseControl(GLFWwindow* window)
 {
 	using namespace glm;
 
 	float fSensivity = 0.005f;
 
-	POINT pos;
-	GetCursorPos(&pos);
+	double x, y;
+	glfwGetCursorPos(window, &x, &y);
 
-	if (bFirst || (pos.x > uScreenWidth - 100) || (pos.x < 100))
+	if (bFirst || (x > uScreenWidth - 100) || (x < 100))
 	{
-		SetCursorPos(uScreenWidth / 2, pos.y);
+		glfwSetCursorPos(window, uScreenWidth / 2, y);
 		uLastX = uScreenWidth / 2;
-		uLastY = pos.y;
+		uLastY = y;
 		bFirst = false;
 	}
 
-	int iDeltaX = pos.x - uLastX;
-	int iDeltaY = uLastY - pos.y;
-	uLastX = pos.x;
-	uLastY = pos.y;
-
-
+	int iDeltaX = x - uLastX;
+	int iDeltaY = uLastY - y;
+	uLastX = x;
+	uLastY = y;
 
 	fYaw += iDeltaX * fSensivity;
 	fPitch += iDeltaY * fSensivity;
@@ -105,41 +101,41 @@ const glm::vec3 &Camera::GetPos() const
     return CameraPos;
 }
 
-void Camera::KeyboardControl()
+void Camera::KeyboardControl(GLFWwindow* window, float deltaTime)
 {
 	float fSpeed = 1.0f;
 
-	if (GetKeyState(VK_SHIFT) & 0x8000)
+	if (glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS)
 		fSpeed = 5.0f;
 
-	float fMovSpeed = fSpeed;
+	float fMovSpeed = fSpeed * deltaTime;
 
 
-	if (GetKeyState(VK_SPACE) & 0x8000)
+	if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS)
 	{
 		CameraPos += fMovSpeed * CameraUp;
 	}
-	if (GetKeyState(VK_CONTROL) & 0x8000)
+	if (glfwGetKey(window, GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS)
 	{
 		CameraPos -= fMovSpeed * CameraUp;
 	}
 	
-	if (GetKeyState('W') & 0x8000)
+	if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
 	{
 		CameraPos += fMovSpeed * CameraFront;
 	}
-	if (GetKeyState('S') & 0x8000)
+	if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
 	{
 		CameraPos -= fMovSpeed * CameraFront;
 	}
 
-	if (GetKeyState('D') & 0x8000)
+	if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
 	{
 		glm::vec3 right = normalize(cross(CameraFront, CameraUp));
 
 		CameraPos += fMovSpeed * right;
 	}
-	if (GetKeyState('A') & 0x8000)
+	if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
 	{
 		glm::vec3 right = normalize(cross(CameraFront, CameraUp));
 		CameraPos -= fMovSpeed * right;

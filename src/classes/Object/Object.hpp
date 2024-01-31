@@ -1,6 +1,7 @@
 #ifndef OBJECT_HPP
 #define OBJECT_HPP
 
+#define GLM_FORCE_SSE42
 #include <vector>
 #include <tuple>
 #include <array>
@@ -20,7 +21,7 @@ public:
     void addFace(const std::array<std::tuple<size_t, size_t, size_t>, 3>& face);
 
     constexpr static size_t NONE = static_cast<size_t>(-1);
-    friend class App;
+    friend class Renderer;
 private:
 
     std::vector<glm::vec4> vertices;

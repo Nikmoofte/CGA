@@ -1,4 +1,5 @@
-#pragma once
+#ifndef CAMERA_HPP
+#define CAMERA_HPP
 
 #include <glm/glm.hpp>
 #include <glm/gtc/type_ptr.hpp>
@@ -14,8 +15,8 @@ class Camera
 
 public:
 	Camera(const glm::vec3& vPos, uint16_t uScreenWidth, uint16_t uSreenHeight);
-	void MouseControl();
-	void KeyboardControl();
+	void MouseControl(GLFWwindow* window);
+	void KeyboardControl(GLFWwindow* window, float deltaTime);
 	void ChangeView(uint16_t uScreenWidth, uint16_t uSreenHeight);
 	void RecalcView();
 	void SetPos(const glm::vec3& vNewPos);
@@ -51,3 +52,4 @@ private:
 
 };
 
+#endif
