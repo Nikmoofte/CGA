@@ -15,7 +15,27 @@ Renderer::Renderer()
 
 void Renderer::init(size_t width, size_t height)
 {
-    shaderProg.createFromFile("../shaders/screen.vert", "../shaders/screen.frag");
+    std::string vert = 
+    "#version 460 core\n"
+    "layout (location = 0) in vec2 vertexPosition;\n"
+    "layout (location = 1) in vec2 vertexTexCoords;\n"
+    "out vec2 fragmentTexCoords;\n"
+    "void main()\n"
+    "{\n"
+        "gl_Position = vec4(vertexPosition, 0.0, 1.0);\n"
+        "fragmentTexCoords = vertexTexCoords;\n"
+    "}\n";
+    
+    std::string frag = 
+    "#version 460 core\n"
+    "in vec2 fragmentTexCoords;\n"
+    "uniform sampler2D frameBuffer;\n"
+    "out vec4 finalColor;\n"
+    "void main()\n"
+    "{\n"
+        "finalColor = texture(frameBuffer, fragmentTexCoords);\n"
+    "}\n";
+    shaderProg.create(vert, frag);
     shaderProg.Use();
 
     glClearColor(0.0f, 1.0f, 0.0f, 1.0f);
@@ -47,11 +67,11 @@ void Renderer::init(size_t width, size_t height)
 void Renderer::render(Camera& camera, Object& obj)
 {
     clearScreen(0x00000000);
+    
     auto view = camera.GetViewMat();
     auto proj = camera.GetProjMat();
     glm::mat4 model = glm::mat4(1.0f);
     glm::mat4 mvp = camera.GetViewportMat() * proj * view * model;
-
 
     size_t facesNum = obj.faces.size();
     size_t threadsNum = threads.size() < facesNum ? threads.size() : facesNum;   

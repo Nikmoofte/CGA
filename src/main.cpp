@@ -11,7 +11,7 @@ int main(int argc, char* argv[])
 {
     if(argc <= 1)
     {
-        App app{"../assets/Chariot.obj"};
+        App app{"../assets/Cube.obj"};
         return app.run();
     }
     else
