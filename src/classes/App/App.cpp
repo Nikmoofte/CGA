@@ -67,7 +67,7 @@ void App::calculateFPS()
         return;
     delta = std::chrono::system_clock::now() - frameStart;
     std::stringstream title;
-    title << "Running at " << 1 / delta.count() << " fps.";
+    title << "Running at " << 1 / delta.count() << " fps. " << "Draw time: " << delta.count() * 1000 << " ms.";
     glfwSetWindowTitle(window, title.str().c_str());
     i = 0;
 }

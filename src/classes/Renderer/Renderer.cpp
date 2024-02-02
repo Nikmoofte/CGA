@@ -2,8 +2,11 @@
 
 #include <avxintrin.h>
 #include <chrono>
+#include <execution>
+#include <algorithm>
 #include "VAO/VBLayout.hpp"
 
+#define NOSINGLEFUNCTION
 
 Renderer::Renderer()
 {
@@ -43,15 +46,17 @@ void Renderer::init(size_t width, size_t height)
 
 void Renderer::render(Camera& camera, Object& obj)
 {
-    clear_screen_avx512(0x00000000);
+    clearScreen(0x00000000);
     auto view = camera.GetViewMat();
     auto proj = camera.GetProjMat();
     glm::mat4 model = glm::mat4(1.0f);
     glm::mat4 mvp = camera.GetViewportMat() * proj * view * model;
 
+
     size_t facesNum = obj.faces.size();
-    size_t threadFacesNum = facesNum / threads.size();
-    for(int i = 0; i < threads.size(); ++i)
+    size_t threadsNum = threads.size() < facesNum ? threads.size() : facesNum;   
+    size_t threadFacesNum = facesNum / threadsNum;
+    for(int i = 0; i < threadsNum; ++i)
     {
         threads[i] = std::thread([&, i, facesNum, threadFacesNum]()
         {
@@ -60,23 +65,25 @@ void Renderer::render(Camera& camera, Object& obj)
                 auto& face = obj.faces[j];
                 size_t vertNum = face.size();
         
-                for(int j = 0; j < vertNum; ++j)
-                {
-                    size_t currInd = std::get<0>(face[j]);
-                    size_t nextInd = std::get<0>(face[(j + 1) % vertNum]);
+                size_t firstInd = std::get<0>(face[0]);
+                size_t secondInd = std::get<0>(face[1]);
+                size_t thirdInd = std::get<0>(face[2]);
 
-                    glm::vec4 currVert = mvp * obj.vertices[currInd];
-                    glm::vec4 nextVert = mvp * obj.vertices[nextInd];
-                    currVert /= currVert.w;
-                    nextVert /= nextVert.w;
+                glm::vec4 firstVert = mvp * obj.vertices[firstInd];
+                glm::vec4 secondVert = mvp * obj.vertices[secondInd];
+                glm::vec4 thirdVert = mvp * obj.vertices[thirdInd];
+                firstVert /= firstVert.w;
+                secondVert /= secondVert.w;
+                thirdVert /= thirdVert.w;
 
-
-                    Brezenhem( 
-                        currVert,
-                        nextVert,
-                        0xffffffff
-                    );
-                }
+#ifdef SINGLEFUNCTION
+                drawTriangle(firstVert, secondVert, thirdVert, 0xffffffff);
+#else
+                uint32_t color = 0xffffffff;
+                Brezenhem(firstVert, secondVert, color);
+                Brezenhem(secondVert, thirdVert, color);
+                Brezenhem(thirdVert, firstVert, color);
+#endif
             }
             
         }
@@ -84,8 +91,8 @@ void Renderer::render(Camera& camera, Object& obj)
 
     }
 
-    for(auto& thread : threads)
-        thread.join();
+    for(int i = 0; i < threadsNum; ++i)
+        threads[i].join();
     drawScreen();
 }
 
@@ -98,23 +105,51 @@ void Renderer::resize(size_t width, size_t height)
     colorBufferMemory.resize(width * height);
 }
 
-void Renderer::clear_screen_avx512(uint32_t color) 
+void Renderer::clearScreen(uint32_t color) 
 {
     __m512i_u colorSIMD = _mm512_set1_epi32(color);
     int blockCount = static_cast<int>(width * height / 16);
     __m512i_u* blocks = (__m512i*) colorBufferMemory.data();
 
-    //SIMD as much as possible
     for (int block = 0; block < blockCount; ++block) 
     {
         blocks[block] = colorSIMD;
     }
 
-    //set any remaining pixels individually
     for (int pixel = blockCount * 16; pixel < width * height; ++pixel) 
     {
         colorBufferMemory[pixel] = color;
     }
+
+}
+
+//TOO SLOW
+void Renderer::clearScreenPar(uint32_t color, size_t threadsNum)
+{
+    int blockPerThread = static_cast<int>((width * height >> 4) / threadsNum);
+    for(int i = 0; i < threadsNum; ++i)
+    {
+        threads[i] = std::thread([&, i, blockPerThread, color]()
+        {
+            __m512i_u colorSIMD = _mm512_set1_epi32(color);
+            int blockCount = static_cast<int>(width * height / 16);
+            __m512i_u* blocks = (__m512i*) colorBufferMemory.data();
+
+            for (int block = i * blockPerThread; block < (i + 1) * blockPerThread; ++block) 
+            {
+                blocks[block] = colorSIMD;
+            }
+
+            for (int pixel = i * blockPerThread * 16; pixel < (i + 1) * blockPerThread; ++pixel) 
+            {
+                colorBufferMemory[pixel] = color;
+            }
+        }
+        );
+    }
+
+    for(int i = 0; i < threadsNum; ++i)
+        threads[i].join();
 }
 
 void Renderer::createColorBuffer() 
@@ -169,6 +204,13 @@ inline void Renderer::Brezenhem(glm::ivec2 start, glm::ivec2 end, const uint32_t
             start.y += sy;
         }
     }
+}
+
+inline void Renderer::drawTriangle(glm::ivec2 first, glm::ivec2 second, glm::ivec2 third, const uint32_t color)
+{
+    Brezenhem(first, second, color);
+    Brezenhem(second, third, color);
+    Brezenhem(third, first, color);
 }
 
 void Renderer::drawScreen()

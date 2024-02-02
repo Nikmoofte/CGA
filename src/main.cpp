@@ -1,6 +1,8 @@
 #include <iostream>
 #include <string>
 
+#include <list>
+
 #define DEBUG
 
 #include "App/App.hpp"

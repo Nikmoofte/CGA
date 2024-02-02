@@ -23,8 +23,10 @@ public:
 private:
     void createColorBuffer();
     void drawScreen();
-    void clear_screen_avx512(uint32_t color);
+    void clearScreen(uint32_t color);
+    void clearScreenPar(uint32_t color, size_t threadsNum); 
     inline void Brezenhem(glm::ivec2 start, glm::ivec2 end, const uint32_t color);
+    inline void drawTriangle(glm::ivec2 first, glm::ivec2 second, glm::ivec2 third, const uint32_t color);
 
     size_t width, height;
     size_t halfWidth, halfHeight;
