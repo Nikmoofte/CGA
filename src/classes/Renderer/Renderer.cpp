@@ -1,6 +1,7 @@
 #include "Renderer.hpp"
 
 #include <avxintrin.h>
+#include <iostream>
 #include <chrono>
 #include <execution>
 #include <algorithm>
@@ -10,7 +11,7 @@
 
 Renderer::Renderer()
 {
-
+    cpu.detect_host();
 }
 
 void Renderer::init(size_t width, size_t height)
@@ -66,7 +67,14 @@ void Renderer::init(size_t width, size_t height)
 
 void Renderer::render(Camera& camera, Object& obj)
 {
-    clearScreen(0x00000000);
+    constexpr uint32_t clearColor = 0x00000000;
+
+    if(cpu.HW_AVX512_CD & cpu.HW_AVX512_BW & cpu.HW_AVX512_DQ)
+        clearScreenAVX512(clearColor);
+    else if(cpu.HW_AVX2)
+        clearScreenAVX2(clearColor);
+    else
+        clearScreen(clearColor);
     
     auto view = camera.GetViewMat();
     auto proj = camera.GetProjMat();
@@ -95,6 +103,17 @@ void Renderer::render(Camera& camera, Object& obj)
                 firstVert /= firstVert.w;
                 secondVert /= secondVert.w;
                 thirdVert /= thirdVert.w;
+
+                if(backFaceCulling)
+                {
+                    glm::vec3 tangent = secondVert - firstVert;
+                    glm::vec3 bitangent = thirdVert - firstVert;
+
+                    glm::vec4 normal = glm::vec4(glm::cross(tangent, bitangent), 0.0f);
+
+                    if(normal.z > 0)
+                        continue;
+                }
 
 #ifdef SINGLEFUNCTION
                 drawTriangle(firstVert, secondVert, thirdVert, 0xffffffff);
@@ -125,10 +144,26 @@ void Renderer::resize(size_t width, size_t height)
     colorBufferMemory.resize(width * height);
 }
 
-void Renderer::clearScreen(uint32_t color) 
+void Renderer::setBackFaceCulling(bool state)
 {
+    backFaceCulling = state;
+}
+
+bool Renderer::getBackFaceCulling(bool state)
+{
+    return backFaceCulling;
+}
+
+void Renderer::toggleBackFaceCulling()
+{
+    backFaceCulling = !backFaceCulling;
+}
+
+void Renderer::clearScreenAVX512(uint32_t color) 
+{
+    constexpr unsigned blockSize = 16;
     __m512i_u colorSIMD = _mm512_set1_epi32(color);
-    int blockCount = static_cast<int>(width * height / 16);
+    int blockCount = static_cast<int>(width * height / blockSize);
     __m512i_u* blocks = (__m512i*) colorBufferMemory.data();
 
     for (int block = 0; block < blockCount; ++block) 
@@ -136,11 +171,37 @@ void Renderer::clearScreen(uint32_t color)
         blocks[block] = colorSIMD;
     }
 
-    for (int pixel = blockCount * 16; pixel < width * height; ++pixel) 
+    for (int pixel = blockCount * blockSize; pixel < width * height; ++pixel) 
     {
         colorBufferMemory[pixel] = color;
     }
 
+}
+void Renderer::clearScreenAVX2(uint32_t color) 
+{
+    constexpr unsigned blockSize = 8;
+    __m256i_u colorSIMD = _mm256_set1_epi32(color);
+    int blockCount = static_cast<int>(width * height / blockSize);
+    __m256i_u* blocks = (__m256i_u*) colorBufferMemory.data();
+
+    for (int block = 0; block < blockCount; ++block) 
+    {
+        blocks[block] = colorSIMD;
+    }
+
+    for (int pixel = blockCount * blockSize; pixel < width * height; ++pixel) 
+    {
+        colorBufferMemory[pixel] = color;
+    }
+
+}
+
+void Renderer::clearScreen(uint32_t color)
+{
+    for (int pixel = 0; pixel < width * height; ++pixel) 
+    {
+        colorBufferMemory[pixel] = color;
+    }
 }
 
 //TOO SLOW

@@ -1,17 +1,13 @@
 #include <iostream>
 #include <string>
 
-#include <list>
-
-#define DEBUG
-
 #include "App/App.hpp"
 
 int main(int argc, char* argv[])
 {
     if(argc <= 1)
     {
-        App app{"../assets/Cube.obj"};
+        App app{"../assets/Giant Octopus.obj"};
         return app.run();
     }
     else

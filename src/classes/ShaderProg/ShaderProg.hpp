@@ -24,11 +24,13 @@ public:
 
     void createFromFile(const std::string& vertexFilepath, const std::string& fragmentFilepath);
     void create(const std::string& vertexSource, const std::string& fragmentSource);
+    void createNoexept(const std::string& vertexSource, const std::string& fragmentSource) noexcept;
     void attachShader(ShaderType type, const std::string &source);
 
     GLint GetLocation(const std::string& name);
 private:
     GLuint CreateProgram(const std::string& vertexSource, const std::string& fragmentSource);
+    GLuint CreateProgramNoexcept(const std::string &vertexSource, const std::string &fragmentSource) noexcept;
     std::string GetSourceFromFile(const std::string& filePath);
     void clear();
 

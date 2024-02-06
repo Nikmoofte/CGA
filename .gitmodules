@@ -4,3 +4,6 @@
 [submodule "deps/tue"]
 	path = deps/tue
 	url = https://github.com/Cincinesh/tue.git
+[submodule "deps/featureDetector"]
+	path = deps/featureDetector
+	url = https://github.com/Mysticial/FeatureDetector.git

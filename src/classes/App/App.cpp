@@ -87,12 +87,21 @@ void App::resize()
 
 void App::processInput(GLFWwindow* window) 
 {
-
+    static bool pressed = false;
 	if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS) 
     {
 		glfwSetWindowShouldClose(window, true);
         return;
 	}
+    if (glfwGetKey(window, GLFW_KEY_1) == GLFW_PRESS && !pressed) 
+    {
+		renderer->toggleBackFaceCulling();
+        pressed = true;
+	}
+    if (glfwGetKey(window, GLFW_KEY_1) == GLFW_RELEASE)
+    {
+        pressed = false;
+    }
     camera.KeyboardControl(window, delta.count());
     if(glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_RIGHT) == GLFW_PRESS)
         camera.MouseControl(window);

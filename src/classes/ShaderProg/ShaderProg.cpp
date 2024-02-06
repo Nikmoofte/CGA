@@ -48,6 +48,11 @@ void ShaderProg::create(const std::string &vertexSource, const std::string &frag
     clear();
     id = CreateProgram(vertexSource, fragmentSource);
 }
+void ShaderProg::createNoexept(const std::string &vertexSource, const std::string &fragmentSource) noexcept
+{
+    clear();
+    id = CreateProgramNoexcept(vertexSource, fragmentSource);
+}
 
 void ShaderProg::attachShader(ShaderType type, const std::string &source)
 {
@@ -94,6 +99,21 @@ unsigned ShaderProg::CreateProgram(const std::string &vertexSource, const std::s
         message += fragmentSource + "\n\n";
         throw std::runtime_error(message);
     }
+    
+    return shaderProgram;
+}
+
+GLuint ShaderProg::CreateProgramNoexcept(const std::string &vertexSource, const std::string &fragmentSource) noexcept
+{
+    unsigned int shaderProgram = glCreateProgram();
+    
+    attachShader(GL_VERTEX_SHADER, vertexSource);
+    attachShader(GL_FRAGMENT_SHADER, fragmentSource);
+
+    for(size_t i = 0; i < lastFreeSpot; ++i)
+        glAttachShader(shaderProgram, shaders[i].getID());
+
+    glLinkProgram(shaderProgram);
     
     return shaderProgram;
 }
