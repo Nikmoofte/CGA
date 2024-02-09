@@ -5,6 +5,7 @@
 
 #include <glm/glm.hpp>
 #include <vector>
+#include <list>
 #include <thread>
 
 #include "ShaderProg/ShaderProg.hpp"
@@ -14,7 +15,6 @@
 #include "Object/Object.hpp"
 #include "x86/cpu_x86.h"
 
-
 class Renderer
 {
 public:
@@ -22,25 +22,39 @@ public:
     void init(size_t width, size_t height);
     void render(Camera& camera, Object& obj);
     void resize(size_t width, size_t height);
+
     void setBackFaceCulling(bool state);
     bool getBackFaceCulling(bool state);
     void toggleBackFaceCulling();
+    void toggleRasterisation();
+    void toggleWireframe();
+    void toggleShowDepth();
 private:
     void createColorBuffer();
     void drawScreen();
     void clearScreenAVX512(uint32_t color); 
     void clearScreenAVX2(uint32_t color); 
     void clearScreen(uint32_t color); 
+    uint32_t crunchColor(const glm::vec3& color);
 
-    void clearScreenPar(uint32_t color, size_t threadsNum); 
+    inline void Brezenhem(glm::vec3 start, glm::vec3 end, const uint32_t color);
+    inline std::list<int> BrezenhemGetList(glm::ivec2 start, glm::ivec2 end);
+    inline void verticalLine(int x, int y1, int y2, float z, const uint32_t color);
+    inline void drawTriangle(glm::ivec2 first, glm::ivec2 second, glm::ivec2 third, float z, const uint32_t color);
 
-    inline void Brezenhem(glm::ivec2 start, glm::ivec2 end, const uint32_t color);
-    inline void drawTriangle(glm::ivec2 first, glm::ivec2 second, glm::ivec2 third, const uint32_t color);
+    inline void setPixel(glm::vec3 pos, uint32_t color);
+    inline void setPixel(int index, float z, uint32_t color);
+    inline float getPixelDepth(glm::ivec2 pos);
+
+
 
     size_t width, height;
     size_t halfWidth, halfHeight;
 
-    bool backFaceCulling = true;
+    bool backFaceCulling = false;
+    bool rasterisation = false;
+    bool wireframe = true;
+    bool showDepth = false;
 
     unsigned colorBuffer;
     VAO vao;
@@ -51,6 +65,7 @@ private:
 
     ShaderProg shaderProg;
     std::vector<uint32_t> colorBufferMemory;
+    std::vector<float> zBufferMemory;
 };
 
 

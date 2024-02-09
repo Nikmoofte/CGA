@@ -8,11 +8,12 @@
 #include <GLFW/glfw3.h>
 
 #include "ObjParser/ObjParser.hpp"
-
+#include "config.hpp"
 bool resize = true;
 
 App::App(size_t width, size_t height)
 {
+    OUTPUT_IF_DEBUG_("App constructor")
     appWidth = width;
     appHeight = height;
 
@@ -23,7 +24,9 @@ App::App(size_t width, size_t height)
 
 App::App(const std::string& filePath) : App(800, 600)
 {
+
     obj = ObjParser{}(filePath);
+    OUTPUT_IF_DEBUG_("object parced");
 }
 
 App::~App()
@@ -62,14 +65,13 @@ GLFWwindow* App::makeWindow()
 
 void App::calculateFPS()
 {
-    static int i = 0;
-    if(i++ < 100)
-        return;
+    // static int i = 0;
+    // if(i++ < 100)
+    //     return;
     delta = std::chrono::system_clock::now() - frameStart;
     std::stringstream title;
     title << "Running at " << 1 / delta.count() << " fps. " << "Draw time: " << delta.count() * 1000 << " ms.";
     glfwSetWindowTitle(window, title.str().c_str());
-    i = 0;
 }
 
 void App::resize()
@@ -78,6 +80,10 @@ void App::resize()
     glfwGetWindowSize(window, &width, &height);
     width = std::max(width, 1);
     height = std::max(height, 1);
+
+    // width = 320;
+    // height = 240;
+
     appWidth = width;
     appHeight = height;
     renderer->resize(appWidth, appHeight);
@@ -98,10 +104,32 @@ void App::processInput(GLFWwindow* window)
 		renderer->toggleBackFaceCulling();
         pressed = true;
 	}
-    if (glfwGetKey(window, GLFW_KEY_1) == GLFW_RELEASE)
+    if (glfwGetKey(window, GLFW_KEY_2) == GLFW_PRESS && !pressed) 
+    {
+        renderer->toggleRasterisation();
+        pressed = true;
+    }
+    if (glfwGetKey(window, GLFW_KEY_3) == GLFW_PRESS && !pressed)
+    {
+        renderer->toggleWireframe();
+        pressed = true;
+    }
+    if (glfwGetKey(window, GLFW_KEY_Z) == GLFW_PRESS && !pressed)
+    {
+        renderer->toggleShowDepth();
+        pressed = true;
+    }
+
+
+    if (glfwGetKey(window, GLFW_KEY_1) == GLFW_RELEASE && 
+        glfwGetKey(window, GLFW_KEY_2) == GLFW_RELEASE &&
+        glfwGetKey(window, GLFW_KEY_3) == GLFW_RELEASE &&
+        glfwGetKey(window, GLFW_KEY_Z) == GLFW_RELEASE
+    )
     {
         pressed = false;
     }
+
     camera.KeyboardControl(window, delta.count());
     if(glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_RIGHT) == GLFW_PRESS)
         camera.MouseControl(window);
@@ -119,11 +147,7 @@ int App::run()
         if(::resize)
             resize();
 
-
-		//update logic can be handled here
-
         camera.RecalcView();
-		//draw (no arguments right now, as no real data exists for drawing)
 		renderer->render(camera, obj);
         
         calculateFPS();

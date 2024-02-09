@@ -17,7 +17,7 @@ void Camera::ChangeView(uint16_t uScreenWidth, uint16_t uScreenHeight)
 	this->uScreenWidth = uScreenWidth;
 	halfHeight = uScreenHeight / 2;
 	halfWidth = uScreenWidth / 2;
-	proj = glm::perspective(glm::radians(60.f), static_cast<float>(uScreenWidth) / uScreenHeight, 0.1f, 100.0f);
+	proj = glm::perspective(glm::radians(60.f), static_cast<float>(uScreenWidth) / uScreenHeight, 0.5f, 100.0f);
 	
 	viewport = glm::mat4(
 		halfWidth,  0, 			 0, 0,

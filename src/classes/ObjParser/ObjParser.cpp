@@ -8,6 +8,7 @@
 #include <thread>
 #include <array>
 
+#include "config.hpp"
 
 #define NOTIMER
 
@@ -16,8 +17,10 @@
 #include <Windows.h>
 #endif
 
+
 Object ObjParser::operator()(const std::string &pathToFile)
 {
+    OUTPUT_IF_DEBUG_("ObjParser start parsing file: " + pathToFile)
     using namespace std;
 #ifdef TIMER
     auto beg = chrono::high_resolution_clock::now();
