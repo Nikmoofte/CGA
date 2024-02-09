@@ -81,11 +81,11 @@ void App::resize()
     width = std::max(width, 1);
     height = std::max(height, 1);
 
-    // width = 320;
-    // height = 240;
-
-    appWidth = width;
-    appHeight = height;
+    // width = 2000;
+    // height = 2000;
+    int scale = 4;
+    appWidth = scale * width;
+    appHeight = scale * height;
     renderer->resize(appWidth, appHeight);
     camera.ChangeView(appWidth, appHeight);
     ::resize = false;
