@@ -8,16 +8,25 @@ int main(int argc, char* argv[])
 {
     OUTPUT_IF_DEBUG_("main start")
 
-    if(argc <= 1)
+    try
     {
-        App app{"../assets/teapot.obj"};
-        return app.run();
+        if(argc <= 1)
+        {
+            App app{"../assets/Chariot.obj"};
+            return app.run();
+        }
+        else
+        {
+            std::string cmd{argv[1]};
+            App app{cmd};   
+            return app.run();
+        }
     }
-    else
+    catch(const std::exception& e)
     {
-        std::string cmd{argv[1]};
-        App app{cmd};   
-        return app.run();
+        std::cerr << e.what() << '\n';
     }
+    
+
 
 }

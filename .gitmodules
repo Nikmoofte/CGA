@@ -7,3 +7,6 @@
 [submodule "deps/featureDetector"]
 	path = deps/featureDetector
 	url = https://github.com/Mysticial/FeatureDetector.git
+[submodule "deps/thread-pool"]
+	path = deps/thread-pool
+	url = https://github.com/bshoshany/thread-pool.git

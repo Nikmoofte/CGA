@@ -33,6 +33,8 @@ private:
 
     Camera camera{glm::vec3(-10.0f, 0.0f, 0.0f), 1920, 1080};
     std::unique_ptr<Renderer> renderer;
+    BS::thread_pool threads{8};
+
 
     GLFWwindow* window;
     std::chrono::time_point<std::chrono::system_clock> frameStart;

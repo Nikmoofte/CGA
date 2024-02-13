@@ -12,11 +12,6 @@
 
 #define SINGLEFUNCTION
 
-Renderer::Renderer()
-{
-    cpu.detect_host();
-}
-
 void Renderer::init(size_t width, size_t height)
 {
     OUTPUT_IF_DEBUG_("Renderer initialisation start")
@@ -71,7 +66,6 @@ void Renderer::init(size_t width, size_t height)
 
 void Renderer::createColorBuffer() 
 {
-
     unsigned int tempWidth = width;
     unsigned int tempHeight = height;
 
@@ -90,7 +84,7 @@ void Renderer::createColorBuffer()
 
 }
 
-void Renderer::resize(size_t width, size_t height)
+void Renderer::resize(size_t width, size_t height, const glm::mat4& viewportProj)
 {
     this->width = width;
     this->height = height;
@@ -98,15 +92,13 @@ void Renderer::resize(size_t width, size_t height)
     halfHeight = height / 2;
     colorBufferMemory.resize(width * height);
     zBufferMemory.resize(width * height);
+    vProj = viewportProj;
 }
 
-uint32_t Renderer::crunchColor(const glm::vec3& color) 
+uint32_t Renderer::crunchColor(glm::vec3& color) 
 {
-
-    uint8_t r = std::max(0, std::min(255, (int)(255 * color.x)));
-    uint8_t g = std::max(0, std::min(255, (int)(255 * color.y)));
-    uint8_t b = std::max(0, std::min(255, (int)(255 * color.z)));
-    return (r) + (g << 8) + (b << 16);
+    color = glm::clamp(color * 255.0f, glm::vec3(0.0f), glm::vec3(255.0f));
+    return (uint8_t(color.r)) + (uint8_t(color.g) << 8) + (uint8_t(color.b) << 16);
 }
 
 void Renderer::render(Camera& camera, Object& obj)
@@ -115,99 +107,70 @@ void Renderer::render(Camera& camera, Object& obj)
     const glm::vec3 defColor = {1.0f, 1.0f, 1.0f};
     constexpr uint32_t wireframeColor = 0;
 
-    static bool first = true;
-    if(first)
-    {
-        OUTPUT_IF_DEBUG_("clearing begin");
-        first = false;
-    }
-    if(cpu.HW_AVX512_CD & cpu.HW_AVX512_BW & cpu.HW_AVX512_DQ)
-        clearScreenAVX512(clearColor);
-    else 
-    if(cpu.HW_AVX2)
-        clearScreenAVX2(clearColor);
-    else
-        clearScreen(clearColor);
+    // static bool first = true;
+    // if(first)
+    // {
+    //     OUTPUT_IF_DEBUG_("clearing begin");
+    //     first = false;
+    // }
+    clearScreenAVX512(clearColor);
     
     auto view = camera.GetViewMat();
-    auto proj = camera.GetProjMat();
-    glm::mat4 mvp = proj * view;
+    glm::mat4 mvp = vProj * view;
     size_t facesNum = obj.faces.size();
-    size_t threadsNum = threads.size() < facesNum ? threads.size() : facesNum;   
-    size_t threadFacesNum = facesNum / threadsNum;
+    //size_t threadsNum = std::thread::hardware_concurrency() < facesNum ? threads.size() : facesNum;   
+    //size_t threadFacesNum = facesNum / threadsNum;
 
-    glm::vec4 lightPos(5.0f, 0.0f, 0.0f, 1.0f);
-
-    for(int i = 0; i < threadsNum; ++i)
+    glm::vec4 lightPos(-5.0f, 5.0f, -5.0f, 1.0f);
+    auto future = threads.submit_loop<size_t>(0, facesNum, [&](size_t i)
     {
-        threads[i] = std::thread([&, i, facesNum, threadFacesNum]()
-        {
-            for(size_t j = i * threadFacesNum; j < (i + 1) * threadFacesNum; ++j)
-            {
-                auto& face = obj.faces[j];
-                size_t vertNum = face.size();
+        auto& face = obj.faces[i];
+
+        glm::vec3 tangent = obj.vertices[std::get<0>(face[1])] - obj.vertices[std::get<0>(face[0])];
+        glm::vec3 bitangent = obj.vertices[std::get<0>(face[2])] - obj.vertices[std::get<0>(face[0])];
+        glm::vec4 normal = glm::normalize(glm::vec4(glm::cross(tangent, bitangent), 0.0f));
         
-                size_t firstInd = std::get<0>(face[0]);
-                size_t secondInd = std::get<0>(face[1]);
-                size_t thirdInd = std::get<0>(face[2]);
 
-                glm::vec4 firstVert = obj.vertices[firstInd];
-                glm::vec4 secondVert = obj.vertices[secondInd];
-                glm::vec4 thirdVert = obj.vertices[thirdInd];
-                glm::vec4 center = (firstVert + secondVert + thirdVert) / 3.0f;
-                glm::vec4 light = lightPos;
+        glm::vec4 firstVert = obj.vertices[std::get<0>(face[0])];
+        glm::vec4 secondVert = obj.vertices[std::get<0>(face[1])];
+        glm::vec4 thirdVert = obj.vertices[std::get<0>(face[2])];
+        glm::vec4 center = (firstVert + secondVert + thirdVert) * 0.333333f;
 
-                firstVert = mvp * firstVert;
-                secondVert = mvp * secondVert;
-                thirdVert = mvp * thirdVert;
+        firstVert = mvp * firstVert;
+        secondVert = mvp * secondVert;
+        thirdVert = mvp * thirdVert;
 
-                firstVert /= firstVert.w;
-                secondVert /= secondVert.w;
-                thirdVert /= thirdVert.w;
-                //light /= light.w;
-                
-                glm::vec4 revLightVec = glm::normalize(light - center);
+        firstVert /= firstVert.w;
+        secondVert /= secondVert.w;
+        thirdVert /= thirdVert.w;
+        
 
-                glm::vec3 tangent = secondVert - firstVert;
-                glm::vec3 bitangent = thirdVert - firstVert;
-                glm::vec4 normal = glm::normalize(glm::vec4(glm::cross(tangent, bitangent), 0.0f));
-                
-                auto color = defColor * glm::dot(normal, revLightVec); 
-                uint32_t colorUI = crunchColor(color);
+        glm::vec4 revLightVec = glm::normalize(lightPos - center);
+        auto color = defColor * glm::dot(normal, revLightVec); 
+        uint32_t colorUI = crunchColor(color);
+        if(glm::dot(normal, glm::vec4(camera.GetPos(), 1.0f) - obj.vertices[std::get<0>(face[0])] ) < 0)
+                return;              
+        
 
-                if(backFaceCulling && glm::dot(normal, (mvp * glm::vec4(camera.GetPos(), 1.0f) - firstVert) ) > 0)
-                        continue;              
-
-
-                firstVert = camera.GetViewportMat() * firstVert;
-                secondVert = camera.GetViewportMat() * secondVert;
-                thirdVert = camera.GetViewportMat() * thirdVert;
-
-                if(rasterisation)
-                {
-                    drawTriangle(firstVert, secondVert, thirdVert, (firstVert.z + secondVert.z + thirdVert.z) / 3.0f, colorUI);
-                }
-                if(wireframe)
-                {
-                    Brezenhem(firstVert, secondVert, wireframeColor);
-                    Brezenhem(secondVert, thirdVert, wireframeColor);
-                    Brezenhem(thirdVert, firstVert, wireframeColor);
-                }
-            }
-            
-        }
-        );
-
+        drawTriangle(firstVert, secondVert, thirdVert, (firstVert.z + secondVert.z + thirdVert.z) * 0.333333, colorUI);
+    
+        // if(wireframe)
+        // {
+        //     Brezenhem(firstVert, secondVert, wireframeColor);
+        //     Brezenhem(secondVert, thirdVert, wireframeColor);
+        //     Brezenhem(thirdVert, firstVert, wireframeColor);
+        // }
+        return;
     }
+    );
 
-    for(int i = 0; i < threadsNum; ++i)
-        threads[i].join();
-
+    future.wait();
     drawScreen();
 }
 
 inline void Renderer::Brezenhem(glm::vec3 start, glm::vec3 end, const uint32_t color)
 {
+
     start = glm::floor(start);
     end = glm::floor(end);
 
@@ -316,8 +279,6 @@ inline void Renderer::drawTriangle(glm::ivec2 first, glm::ivec2 second, glm::ive
 
     y01.append_range(y12);
     y02.push_back(third.y);
-    if(y01.empty() || y02.empty())
-        return;
 
     auto y02it = y02.begin();
     auto y01it = y01.begin();
@@ -436,7 +397,7 @@ void Renderer::drawScreen()
 
     if(showDepth)
     {
-        //std::ranges::for_each(zBufferMemory, [](auto& elem) { elem = 1.0f - elem + 0.2f; });
+        std::ranges::for_each(zBufferMemory, [](auto& elem) { elem = 1.0f - elem + 0.2f; });
         glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, height, width, 0,  GL_DEPTH_COMPONENT, GL_FLOAT, zBufferMemory.data());
     }
     else

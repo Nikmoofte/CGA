@@ -17,7 +17,7 @@ void Camera::ChangeView(uint16_t uScreenWidth, uint16_t uScreenHeight)
 	this->uScreenWidth = uScreenWidth;
 	halfHeight = uScreenHeight / 2;
 	halfWidth = uScreenWidth / 2;
-	proj = glm::perspective(glm::radians(60.f), static_cast<float>(uScreenWidth) / uScreenHeight, 0.5f, 100.0f);
+	proj = glm::perspective(glm::radians(60.f), static_cast<float>(uScreenWidth) / uScreenHeight, 0.5f, 1000.0f);
 	
 	viewport = glm::mat4(
 		halfWidth,  0, 			 0, 0,
@@ -99,6 +99,11 @@ const glm::mat4 &Camera::GetViewportMat() const
 const glm::vec3 &Camera::GetPos() const
 {
     return CameraPos;
+}
+
+const glm::vec3 &Camera::GetCameraFront() const
+{
+    return CameraFront;
 }
 
 void Camera::KeyboardControl(GLFWwindow* window, float deltaTime)

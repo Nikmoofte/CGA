@@ -18,14 +18,13 @@ App::App(size_t width, size_t height)
     appHeight = height;
 
     window = makeWindow();
-    renderer = std::make_unique<Renderer>();
+    renderer = std::make_unique<Renderer>(threads);
     renderer->init(appWidth, appHeight);
 }
 
 App::App(const std::string& filePath) : App(800, 600)
 {
-
-    obj = ObjParser{}(filePath);
+    obj = ObjParser{}(filePath, threads);
     OUTPUT_IF_DEBUG_("object parced");
 }
 
@@ -83,11 +82,11 @@ void App::resize()
 
     // width = 2000;
     // height = 2000;
-    int scale = 4;
+    constexpr float scale = 1;
     appWidth = scale * width;
     appHeight = scale * height;
-    renderer->resize(appWidth, appHeight);
     camera.ChangeView(appWidth, appHeight);
+    renderer->resize(appWidth, appHeight, camera.GetViewportMat() * camera.GetProjMat());
     ::resize = false;
 }
 

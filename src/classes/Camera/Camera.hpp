@@ -24,7 +24,8 @@ public:
 	const glm::mat4& GetViewMat() const;
 	const glm::mat4& GetViewportMat() const;
 
-	const glm::vec3& GetPos() const ;
+	const glm::vec3& GetPos() const;
+	const glm::vec3& GetCameraFront() const;
 
 private:
 	unsigned uProgId;

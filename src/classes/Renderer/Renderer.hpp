@@ -14,14 +14,16 @@
 #include "Camera/Camera.hpp"
 #include "Object/Object.hpp"
 #include "x86/cpu_x86.h"
+#include "BS_thread_pool.hpp"
+
 
 class Renderer
 {
 public:
-    Renderer();
+    Renderer(BS::thread_pool& pool) : threads(pool){ cpu.detect_host(); };
     void init(size_t width, size_t height);
     void render(Camera& camera, Object& obj);
-    void resize(size_t width, size_t height);
+    void resize(size_t width, size_t height, const glm::mat4& viewportProj);
 
     void setBackFaceCulling(bool state);
     bool getBackFaceCulling(bool state);
@@ -35,7 +37,7 @@ private:
     void clearScreenAVX512(uint32_t color); 
     void clearScreenAVX2(uint32_t color); 
     void clearScreen(uint32_t color); 
-    uint32_t crunchColor(const glm::vec3& color);
+    uint32_t crunchColor(glm::vec3& color);
 
     inline void Brezenhem(glm::vec3 start, glm::vec3 end, const uint32_t color);
     inline std::list<int> BrezenhemGetList(glm::ivec2 start, glm::ivec2 end);
@@ -46,7 +48,7 @@ private:
     inline void setPixel(int index, float z, uint32_t color);
     inline float getPixelDepth(glm::ivec2 pos);
 
-
+    glm::mat4 vProj;
 
     size_t width, height;
     size_t halfWidth, halfHeight;
@@ -60,8 +62,9 @@ private:
     VAO vao;
     VBO vbo;
 
-    std::vector<std::thread> threads{std::thread::hardware_concurrency()};
+    //std::vector<std::thread> threads{std::thread::hardware_concurrency()};
     FeatureDetector::cpu_x86 cpu;
+    BS::thread_pool& threads;
 
     ShaderProg shaderProg;
     std::vector<uint32_t> colorBufferMemory;
