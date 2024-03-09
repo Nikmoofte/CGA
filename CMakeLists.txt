@@ -4,6 +4,7 @@ project(WinProj)
 set(ClassesDir src/classes/)
 set(AssetsDir src/assets/)
 set(Dependencies deps/)
+set(GLAD_SOURCES_DIR ${Dependencies}glad/)
 set(FeatureDetector ${Dependencies}featureDetector/src/)
 
 
@@ -15,23 +16,13 @@ set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 set(Classes 
-    ${ClassesDir}App/App.cpp
-    ${ClassesDir}ObjParser/ObjParser.cpp
-    ${ClassesDir}Object/Object.cpp
-    ${ClassesDir}Camera/Camera.cpp
-    ${ClassesDir}Renderer/Renderer.cpp
-    ${ClassesDir}ShaderProg/ShaderProg.cpp
-    ${ClassesDir}Shader/Shader.cpp
-    ${ClassesDir}Shader/ShaderType.cpp
-    ${ClassesDir}VBO/VBO.cpp
-    ${ClassesDir}VAO/VAO.cpp
-    ${ClassesDir}EBO/EBO.cpp
-    ${ClassesDir}VAO/VBLayout.cpp
+
 )
-add_executable(main src/main.cpp src/glad.c ${Classes})
+add_executable(main src/main.cpp ${Classes})
 
 
 add_subdirectory(deps/glm)
+add_subdirectory("${GLAD_SOURCES_DIR}/cmake" glad_cmake)
 add_subdirectory(deps/glfw)
 add_subdirectory(deps/featureDetector)
 add_subdirectory(deps/tinyobjloader)
@@ -39,6 +30,9 @@ target_link_libraries(main PUBLIC FeatureDetector)
 target_link_libraries(main PUBLIC glm)
 target_link_libraries(main PUBLIC glfw)
 target_link_libraries(main PUBLIC opengl32)
+target_link_libraries(main PUBLIC tinyobjloader)
+glad_add_library(glad_gl_core_46 REPRODUCIBLE API gl:core=4.6)
+target_link_libraries(main PUBLIC glad_gl_core_46)
 
 
 target_include_directories(main PUBLIC ${ClassesDir})
