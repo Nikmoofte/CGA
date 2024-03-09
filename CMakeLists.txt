@@ -19,6 +19,8 @@ set(Classes
     ${ClassesDir}Viewer/Shader/Shader.cpp
     ${ClassesDir}Viewer/Shader/ShaderType.cpp
     ${ClassesDir}Viewer/Window/Window.cpp
+    ${ClassesDir}Viewer/Menu/Menu.cpp
+    ${ClassesDir}Viewer/App/App.cpp
 )
 set(IMGUI_SRCS
     ${ImguiPath}imgui_demo.cpp
@@ -50,6 +52,7 @@ target_link_libraries(main PUBLIC
 
 target_include_directories(main PUBLIC ${ClassesDir})
 target_include_directories(main PUBLIC ${AssetsDir})
+target_include_directories(main PUBLIC ${ImguiPath})
 target_include_directories(main PUBLIC include)
 target_include_directories(main PUBLIC ${FeatureDetector})
 target_include_directories(main PUBLIC ${Dependencies}thread-pool/include)

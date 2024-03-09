@@ -17,6 +17,7 @@ namespace Viewer
             bool shouldClose() const { return glfwWindowShouldClose(window); }
             void pollEvents() const { glfwPollEvents(); }
             void swapBuffers() const { glfwSwapBuffers(window); }
+            void setTitle(const char* title) const { glfwSetWindowTitle(window, title); }
 
             void AddOnKeyChanged(std::function<void(int key, int scancode, int action, int mods)>&& callback);
             void AddOnCursorPositionChanged(std::function<void(double xpos, double ypos)>&& callback);

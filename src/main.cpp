@@ -1,9 +1,9 @@
 #include "config.hpp"
 
-#include "Viewer/Window/Window.hpp"
+#include "Viewer/App/App.hpp"
 int main()
 {
     OUTPUT_IF_DEBUG_("Program started");
-    
-    return 0;
+    Viewer::App app;
+    return app.Run();
 }
