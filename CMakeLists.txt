@@ -21,6 +21,9 @@ set(Classes
     ${ClassesDir}Viewer/Window/Window.cpp
     ${ClassesDir}Viewer/Menu/Menu.cpp
     ${ClassesDir}Viewer/App/App.cpp
+
+    ${ClassesDir}Engine/Renderer/Renderer.cpp
+    ${ClassesDir}Engine/Scene/Scene.cpp
 )
 set(IMGUI_SRCS
     ${ImguiPath}imgui_demo.cpp
