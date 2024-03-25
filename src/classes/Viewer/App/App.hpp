@@ -2,14 +2,12 @@
 #define APP_HPP
 
 #include <memory>
-//#include "../Engine/Settings.h"
 
-// namespace Engine
-// {
-// 	class Renderer;
-// 	class Camera;
-// 	class Scene;
-// }
+namespace Engine
+{
+	class Renderer;
+	class Scene;
+}
 
 namespace Viewer
 {
@@ -37,16 +35,14 @@ namespace Viewer
         unsigned vao{};
         unsigned texture{};
 
-		//Engine::Settings settings{};
-
 		// Viewer
 		std::unique_ptr<class Window> window;
 		std::unique_ptr<class Menu> menu;
 		std::unique_ptr<class ShaderProg> shader;
 
 		// Engine
-		// std::unique_ptr<Engine::Renderer> renderer;
-		// std::unique_ptr<Engine::Scene> scene;
+		std::unique_ptr<Engine::Renderer> renderer;
+		std::unique_ptr<Engine::Scene> scene;
 	};
 }
 

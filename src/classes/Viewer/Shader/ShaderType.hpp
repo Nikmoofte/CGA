@@ -5,7 +5,7 @@
 #include <GLFW/glfw3.h>
 #include <utility>
 #include <string>
-namespace Viewer
+namespace Viewer 
 {
     struct ShaderType
     {

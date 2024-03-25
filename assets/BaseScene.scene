@@ -1,0 +1,17 @@
+mesh
+{
+    file Chariot.obj
+}
+
+light 
+{
+    pos 10.0 10.0 10.0
+    color 1.0 1.0 1.0
+}
+
+camera
+{
+    pos -2.0, 0.0, 0.0
+    front 1.0, 0.0, 0.0
+    fov 90.0
+}

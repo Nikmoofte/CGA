@@ -1,8 +1,18 @@
 #include "App.hpp"
 
+#include "config.hpp"
+
 #include "Viewer/Window/Window.hpp"
 #include "Viewer/Menu/Menu.hpp"
 #include "Viewer/ShaderProg/ShaderProg.hpp"
+
+#include "Engine/Settings.hpp"
+#include "Engine/Renderer/Renderer.hpp"
+#include "Engine/Camera/Camera.hpp"
+#include "Engine/Scene/Scene.hpp"
+#include "Assets/Mesh/Mesh.hpp"
+
+#include "path.hpp"
 
 #include <chrono>
 
@@ -15,6 +25,7 @@ namespace Viewer
     App::App()
     {    
         CreateWindow();
+        CreateRender();
         CreatePipeline();
     }
 
@@ -62,7 +73,9 @@ namespace Viewer
                 "finalColor = texture(frameBuffer, fragmentTexCoords);\n"
             "}\n"
         ;
-        window = std::make_unique<Window>(800, 600);
+        auto settings = Engine::Settings::Get();
+
+        window = std::make_unique<Window>(settings.windowSize);
         menu = std::make_unique<Menu>(*window);
         shader = std::make_unique<ShaderProg>();
         shader->create(vert, frag);
@@ -87,7 +100,8 @@ namespace Viewer
 
     void App::DrawQuad() const
     {
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 800, 600, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+        auto& screenDimentions = Engine::Settings::Get().windowSize;
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, screenDimentions.x, screenDimentions.y, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
         glDrawArrays(GL_TRIANGLES, 0, 6);
     }
 
@@ -126,5 +140,11 @@ namespace Viewer
         glTextureParameteri(texture, GL_TEXTURE_WRAP_T, GL_REPEAT);
         glTextureParameteri(texture, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
         glTextureParameteri(texture, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    }
+
+    void App::CreateRender()
+    {
+        scene = std::make_unique<Engine::Scene>();
+        renderer = std::make_unique<Engine::Renderer>(*scene);
     }
 }

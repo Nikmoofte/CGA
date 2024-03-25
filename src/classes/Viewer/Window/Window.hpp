@@ -4,6 +4,7 @@
 #include <functional>
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
+#include <glm/glm.hpp>
 
 namespace Viewer
 {
@@ -11,6 +12,7 @@ namespace Viewer
     {
         public:
             Window(int width, int height);
+            Window(glm::ivec2 size) : Window(size.x, size.y) {}
             ~Window();
 
             GLFWwindow* Get() const { return window; }

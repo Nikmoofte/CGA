@@ -15,6 +15,21 @@ set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 set(Classes 
+    ${ClassesDir}Assets/Mesh/Mesh.cpp
+    ${ClassesDir}Assets/Light/Light.cpp
+    ${ClassesDir}Assets/Vertex.hpp
+    ${ClassesDir}Assets/Color4b.hpp
+    
+    
+    ${ClassesDir}Engine/Renderer/Renderer.cpp
+    ${ClassesDir}Engine/Scene/Scene.cpp
+    ${ClassesDir}Engine/Camera/Camera.cpp
+    ${ClassesDir}Engine/Triangle/Triangle.cpp
+    ${ClassesDir}Engine/Settings.hpp
+    ${ClassesDir}Engine/Buffers/ColorBuffer/ColorBuffer.cpp
+    
+    ${ClassesDir}Loader/Loader.cpp
+
     ${ClassesDir}Viewer/ShaderProg/ShaderProg.cpp
     ${ClassesDir}Viewer/Shader/Shader.cpp
     ${ClassesDir}Viewer/Shader/ShaderType.cpp
@@ -22,8 +37,7 @@ set(Classes
     ${ClassesDir}Viewer/Menu/Menu.cpp
     ${ClassesDir}Viewer/App/App.cpp
 
-    ${ClassesDir}Engine/Renderer/Renderer.cpp
-    ${ClassesDir}Engine/Scene/Scene.cpp
+    ${ClassesDir}path.hpp
 )
 set(IMGUI_SRCS
     ${ImguiPath}imgui_demo.cpp
