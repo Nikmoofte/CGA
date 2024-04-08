@@ -1,19 +1,12 @@
-#include <Windows.h>
-#include <iostream>
-#include <string>
+#include "config.hpp"
+#include "path.hpp"
+#include "Viewer/App/App.hpp"
 
-#define DEBUG
 
-#include "App/App.hpp"
-
-int APIENTRY WinMain(HINSTANCE hInst, HINSTANCE,  LPSTR szCmdLine, int nCmdShow)
+int main(int argc, char* argv[])
 {
-#ifdef DEBUG
-    App app{"../src/assets/Cube.obj"};
-#else
-    std::string cmd{szCmdLine};
-    
-    App app{cmd.substr(1, cmd.size() - 2)};
-#endif
-    return app.run();
+    OUTPUT_IF_DEBUG_("Program started");
+
+    Viewer::App app;
+    return app.Run();
 }

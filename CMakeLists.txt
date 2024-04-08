@@ -4,26 +4,74 @@ project(WinProj)
 set(ClassesDir src/classes/)
 set(AssetsDir src/assets/)
 set(Dependencies deps/)
+set(FeatureDetector ${Dependencies}featureDetector/src/)
+set(ImguiPath ${Dependencies}imgui/)
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-c++98-compat")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -mavx512bw -mavx512cd -mavx512dq")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -mavx2")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3")
 
 set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 set(Classes 
-    ${ClassesDir}App/App.cpp
-    ${ClassesDir}ObjParser/ObjParser.cpp
-    ${ClassesDir}Object/Object.cpp
-    ${ClassesDir}Camera/Camera.cpp
+    ${ClassesDir}Assets/Mesh/Mesh.cpp
+    ${ClassesDir}Assets/Light/Light.cpp
+    ${ClassesDir}Assets/Vertex.hpp
+    ${ClassesDir}Assets/Color4b.hpp
+    
+    
+    ${ClassesDir}Engine/Renderer/Renderer.cpp
+    ${ClassesDir}Engine/Scene/Scene.cpp
+    ${ClassesDir}Engine/Camera/Camera.cpp
+    ${ClassesDir}Engine/Triangle/Triangle.cpp
+    ${ClassesDir}Engine/Settings.hpp
+    ${ClassesDir}Engine/Buffers/ColorBuffer/ColorBuffer.cpp
+    
+    ${ClassesDir}Loader/Loader.cpp
+
+    ${ClassesDir}Viewer/ShaderProg/ShaderProg.cpp
+    ${ClassesDir}Viewer/Shader/Shader.cpp
+    ${ClassesDir}Viewer/Shader/ShaderType.cpp
+    ${ClassesDir}Viewer/Window/Window.cpp
+    ${ClassesDir}Viewer/Menu/Menu.cpp
+    ${ClassesDir}Viewer/App/App.cpp
+
+    ${ClassesDir}path.hpp
 )
-add_executable(main WIN32 src/main.cpp ${Classes})
+set(IMGUI_SRCS
+    ${ImguiPath}imgui_demo.cpp
+    ${ImguiPath}imgui_draw.cpp
+    ${ImguiPath}imgui_tables.cpp
+    ${ImguiPath}imgui_widgets.cpp
+    ${ImguiPath}imgui.cpp
+    ${ImguiPath}backends/imgui_impl_opengl3.cpp
+    ${ImguiPath}backends/imgui_impl_glfw.cpp
+)
+add_executable(main src/main.cpp ${Classes} ${IMGUI_SRCS})
 
 
 add_subdirectory(deps/glm)
-target_link_libraries(main PUBLIC glm)
-target_link_libraries(main PUBLIC windowscodecs)
-target_link_libraries(main PUBLIC Msimg32)
-target_link_libraries(main PUBLIC Gdiplus)
+add_subdirectory(deps/glad)
+add_subdirectory(deps/glfw)
+add_subdirectory(deps/featureDetector)
+add_subdirectory(deps/tinyobjloader)
+target_link_libraries(main PUBLIC 
+                            FeatureDetector
+                            glm
+                            glfw
+                            opengl32
+                            tinyobjloader
+                            glad
+)
+
+
 
 target_include_directories(main PUBLIC ${ClassesDir})
 target_include_directories(main PUBLIC ${AssetsDir})
+target_include_directories(main PUBLIC ${ImguiPath})
+target_include_directories(main PUBLIC include)
+target_include_directories(main PUBLIC ${FeatureDetector})
+target_include_directories(main PUBLIC ${Dependencies}thread-pool/include)
+#target_include_directories(main PUBLIC ${Dependencies}tinyobjloader)
+
