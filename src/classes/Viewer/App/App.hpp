@@ -26,7 +26,7 @@ namespace Viewer
 		void CreateWindow();
 		void RegisterCallbacks();
 		void MeasureTime() const;
-		void Resize() const;
+		void Resize(int width, int heigh);
 		void UpdateSettings();
 		void Recreate();
 

@@ -27,6 +27,7 @@ set(Classes
     ${ClassesDir}Engine/Triangle/Triangle.cpp
     ${ClassesDir}Engine/Settings.hpp
     ${ClassesDir}Engine/Buffers/ColorBuffer/ColorBuffer.cpp
+    ${ClassesDir}Engine/Buffers/DepthBuffer/DepthBuffer.cpp
     
     ${ClassesDir}Loader/Loader.cpp
 

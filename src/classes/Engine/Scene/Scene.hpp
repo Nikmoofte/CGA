@@ -27,6 +27,14 @@ namespace Engine
 
         class Camera& getCamera();
         const Camera& getCamera() const;
+
+        std::vector<Assets::Light>& getLights() { return lights; } 
+        const std::vector<Assets::Light>& getLights() const { return lights; } 
+
+        const std::vector<Assets::Vertex>& getVertecies() const;
+        const std::vector<size_t>& getIndecies() const;
+        const size_t getTriangleCount() const;
+
         void fillBuffer();
 
     private:

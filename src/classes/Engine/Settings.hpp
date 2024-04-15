@@ -16,6 +16,10 @@ namespace Engine
 
         glm::ivec2 windowSize{800, 600};
         float resolutionScale = 1.0f;
+        float fov = 90.0f;
+        float ambientStrength = 0.1;
+        float specularStrength = 0.5;
+
 
     private:
         Settings() = default;

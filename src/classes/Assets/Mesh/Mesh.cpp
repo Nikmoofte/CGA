@@ -1,4 +1,5 @@
 #include "Mesh.hpp"
+#include <unordered_map>
 #include "tiny_obj_loader.h"
 
 namespace Assets
@@ -11,7 +12,7 @@ namespace Assets
 
     Mesh::Mesh(const std::string &path, glm::mat4 &&modelTransform) : Mesh(path)
     {
-		this->modelTransform = std::move(modelTransform);
+		this->modelTransform = modelTransform;
     }
 
     void Mesh::Wait()
@@ -23,7 +24,6 @@ namespace Assets
 	void Mesh::Load(const std::string& path)
 	{
         tinyobj::ObjReaderConfig reader_config;
-        reader_config.mtl_search_path = pathToMaterinals; // Path to material files
 
 		tinyobj::ObjReader reader;
 

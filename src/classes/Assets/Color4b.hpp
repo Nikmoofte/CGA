@@ -13,8 +13,29 @@ namespace Assets
     public:
         Color4b() = default;
         Color4b(uint8_t r, uint8_t g, uint8_t b, uint8_t a = 255) : r(r), g(g), b(b), a(a) {}
+        Color4b(const Color4b& color) : r(color.r), g(color.g), b(color.b), a(color.a) {}
+        Color4b(Color4b&& color) noexcept : r(color.r), g(color.g), b(color.b), a(color.a) {}
+        Color4b& operator=(const Color4b& color)
+        {
+            r = color.r;
+            g = color.g;
+            b = color.b;
+            a = color.a;
+
+            return *this;
+        }
+        Color4b& operator=(Color4b&& color) noexcept
+        {
+            r = color.r;
+            g = color.g;
+            b = color.b;
+            a = color.a;
+
+            return *this;
+        }
         inline void fromVec(glm::vec4 color)
         {
+            color = glm::clamp(color, 0.0f, 1.0f);
             color *= 255.0f;
             r = std::clamp<uint8_t>(color.g, 0, 255);
             g = std::clamp<uint8_t>(color.b, 0, 255);

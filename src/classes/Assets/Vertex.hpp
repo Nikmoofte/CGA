@@ -19,6 +19,12 @@ namespace Assets
 		glm::vec3 normal{};
 		glm::vec2 texCoords{};
 
+		void perspectiveDivide()
+		{
+			auto invW = 1.0f / projectedPosition.w;
+			projectedPosition *= invW;
+		}
+
 		bool operator==(const Vertex& other) const
 		{
 			return position == other.position &&

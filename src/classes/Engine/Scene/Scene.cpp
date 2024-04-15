@@ -29,7 +29,7 @@ namespace Engine
         }
         else
         {
-            std::string filepathString = Path::Get().fromRoot({"assets", "models", file}).string();
+            std::string filepathString = Path::get().fromRoot({"assets", "models", file}).string();
             OUTPUT_IF_DEBUG_(filepathString);
             id = meshes.size();
             meshMap[file] = id;
@@ -53,6 +53,21 @@ namespace Engine
         return *camera;
     }
 
+    const std::vector<Assets::Vertex> &Scene::getVertecies() const
+    {
+        return allVertices;
+    }
+
+    const std::vector<size_t> &Scene::getIndecies() const
+    {
+        return indicies;
+    }
+
+    const size_t Scene::getTriangleCount() const
+    {
+        return indicies.size() / 3;
+    }
+
     void Scene::fillBuffer()
     {
         allVertices.clear();
@@ -63,26 +78,26 @@ namespace Engine
 
         for(auto& mesh : meshes)
         {
-            auto& model = mesh->GetModelTransform();
+            auto& model = mesh->getModelMat();
             auto modelTransInv = glm::transpose(glm::inverse(model));
-            for(auto& vert : mesh->GetVertices())
+            for(auto& vert : mesh->getVertices())
             {
                 vert.position = model * glm::vec4(vert.position, 1.f);
 				vert.normal = glm::normalize(modelTransInv * glm::vec4(vert.normal, 1.f));
 				vert.id = id++;
 				allVertices.push_back(vert);
             }
-            for(auto& index : mesh->GetIndecies())
+            for(auto& index : mesh->getIndecies())
             {
                 indicies.push_back(index + offset);
             }
-            offset += mesh->GetVerticesSize();
+            offset += mesh->getVerticesSize();
         }
     }
 
     void Scene::Load()
     {
-        if(!Loader::LoadSceneFromFile(Path::Get().fromRoot({"assets", "BaseScene.scene"}), *this))
+        if(!Loader::LoadSceneFromFile(Path::get().fromRoot({"assets", "BaseScene.scene"}), *this))
         {
             OUTPUT_IF_DEBUG_("Failed to load scene");
         }
