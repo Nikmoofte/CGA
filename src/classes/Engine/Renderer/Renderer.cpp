@@ -108,7 +108,7 @@ namespace Engine
                 {
                     for(int x = min.x; x < max.x; ++x)
                     {
-                        glm::vec3 bary = getBarycentric({x, y}, v0.projectedPosition, v1.projectedPosition, v2.projectedPosition);
+                        glm::vec3 bary = triangle.getBarycentric({x, y});
                         if(bary.x > 0.0f && bary.y > 0.0f && bary.z > 0.0f)
                         {
                             float z = glm::dot(bary, vec3(v0.projectedPosition.z, v1.projectedPosition.z, v2.projectedPosition.z));
