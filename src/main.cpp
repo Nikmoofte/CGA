@@ -2,6 +2,7 @@
 #include "path.hpp"
 #include "Viewer/App/App.hpp"
 
+#include <glm/glm.hpp>
 
 int main(int argc, char* argv[])
 {

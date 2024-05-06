@@ -12,7 +12,7 @@ namespace Engine
         class BufferBase
         {
         public:
-            BufferBase(size_t size) : buffer{size}
+            BufferBase(size_t size) : buffer(size)
             {
 
             }
@@ -28,7 +28,11 @@ namespace Engine
             {
                 return buffer.resize(newSize);
             }
-            T* get() 
+            T& get(size_t index)
+            {
+                return buffer[index];
+            }
+            T* data() 
             {
                 return reinterpret_cast<T*>(buffer.data());
             }

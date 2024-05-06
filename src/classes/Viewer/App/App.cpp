@@ -11,6 +11,9 @@
 #include "Engine/Camera/Camera.hpp"
 #include "Engine/Scene/Scene.hpp"
 #include "Assets/Mesh/Mesh.hpp"
+#include "Engine/Buffers/ColorBuffer/ColorBuffer.hpp"
+#include "Engine/Buffers/DepthBuffer/DepthBuffer.hpp"
+#include "Engine/Settings.hpp"
 
 #include "path.hpp"
 
@@ -27,6 +30,8 @@ namespace Viewer
         CreateWindow();
         CreateRender();
         CreatePipeline();
+
+        RegisterCallbacks();
     }
 
     App::~App() = default;
@@ -36,10 +41,12 @@ namespace Viewer
         start = std::chrono::steady_clock::now();
         while (!window->shouldClose())
         {
+            scene->getCamera().OnBeforeRender();
             glClear(GL_COLOR_BUFFER_BIT);
             
             DrawQuad();
             menu->Render();
+            renderer->render();
             
             window->swapBuffers();
             window->pollEvents();
@@ -82,6 +89,41 @@ namespace Viewer
         shader->Use();
     }
 
+    void App::RegisterCallbacks()
+	{
+		window->addOnCursorPositionChanged([this](const double xpos, const double ypos)-> void
+		{
+			if (menu->WantCaptureKeyboard() || menu->WantCaptureMouse())
+				return;
+
+			if (scene->getCamera().OnCursorPositionChanged(xpos, ypos)) {}
+		});
+
+		window->addOnKeyChanged([this](const int key, const int scancode, const int action, const int mods)-> void
+		{
+			if (menu->WantCaptureKeyboard())
+				return;
+
+			scene->getCamera().OnKeyChanged(key, scancode, action, mods);
+		});
+
+		window->addOnMouseButtonChanged([this](const int button, const int action, const int mods)-> void
+		{
+			if (menu->WantCaptureMouse())
+				return;
+
+			scene->getCamera().OnMouseButtonChanged(button, action, mods);
+		});
+
+		window->addOnScrollChanged([this](const double xoffset, const double yoffset)-> void { });
+
+        window->addOnResize([this](const int width, const int height)-> void
+        {
+            Resize(width, height);
+        });
+
+	}
+
     void App::MeasureTime() const
     {
         ++currentFrame;
@@ -93,15 +135,25 @@ namespace Viewer
             const double fFPS = (double)currentFrame / delta.count();
             start = end;
             currentFrame = 0;
-            std::string title = "OpenGL - " + std::to_string(fFPS) + " fps";
-            window->setTitle(title.c_str());
+            std::stringstream title;
+            title << "Running at " << std::to_string(fFPS) << " fps. " ;
+            window->setTitle(title.str().c_str());
         }
+    }
+
+    void App::Resize(int width, int height)
+    {
+        glViewport(0, 0, width, height);
+        auto& settings = Engine::Settings::Get();
+        settings.windowSize = {width, height};
+        scene->getCamera().resize(settings.fov, settings.windowSize);
+        renderer->resetBuffers();
     }
 
     void App::DrawQuad() const
     {
         auto& screenDimentions = Engine::Settings::Get().windowSize;
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, screenDimentions.x, screenDimentions.y, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, screenDimentions.x, screenDimentions.y, 0, GL_RGBA, GL_UNSIGNED_BYTE, renderer->getColorBuffer());
         glDrawArrays(GL_TRIANGLES, 0, 6);
     }
 

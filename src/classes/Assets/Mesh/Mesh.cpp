@@ -1,17 +1,15 @@
 #include "Mesh.hpp"
+#include <unordered_map>
 #include "tiny_obj_loader.h"
+
+#include "Engine/Scene/Scene.hpp"
 
 namespace Assets
 {
 
-    Mesh::Mesh(const std::string &path)
+    Mesh::Mesh(const std::string &path, ::Engine::Scene& scene)
     {
-        loader = std::async(std::launch::async, &Mesh::Load, this, path);
-    }
-
-    Mesh::Mesh(const std::string &path, glm::mat4 &&modelTransform) : Mesh(path)
-    {
-		this->modelTransform = std::move(modelTransform);
+        loader = std::async(std::launch::async, &Mesh::Load, this, path, std::ref(scene));
     }
 
     void Mesh::Wait()
@@ -20,10 +18,9 @@ namespace Assets
             loader.wait();
     }
 
-	void Mesh::Load(const std::string& path)
+	void Mesh::Load(const std::string& path, ::Engine::Scene& scene)
 	{
         tinyobj::ObjReaderConfig reader_config;
-        reader_config.mtl_search_path = pathToMaterinals; // Path to material files
 
 		tinyobj::ObjReader reader;
 
@@ -34,6 +31,11 @@ namespace Assets
 
 		std::unordered_map<Vertex, uint32_t> uniqueVertices{};
 		auto& attrib = reader.GetAttrib();
+		auto& materials = reader.GetMaterials();
+		for(auto & material : materials)
+		{
+			scene.addMaterial(material);
+		}
 		for (const auto& shape : reader.GetShapes())
 		{
 			for (const auto& index : shape.mesh.indices)
@@ -73,6 +75,7 @@ namespace Assets
 
 				indices.push_back(uniqueVertices[vertex]);
 			}
+			lastMaterialIndex.push_back(indices.size());
 		}
 	}
 }

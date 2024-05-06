@@ -48,7 +48,9 @@ namespace Loader
                         {
                             std::stringstream ss(line.substr(pos + 3 + 1));
                             glm::vec3 pos{0.0f};
-                            ss >> pos.x >> pos.y >> pos.z;
+                            ss >> pos.x;
+                            ss >> pos.y;
+                            ss >> pos.z;
                             model = glm::translate(model, pos);
                             continue;
                         }

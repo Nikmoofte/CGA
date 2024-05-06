@@ -9,12 +9,34 @@ namespace Engine
     class Triangle
     {
     public:
-        Triangle(size_t ind, std::array<glm::ivec2, 3>&& screenSpaceVerts, std::array<uint32_t, 3>&& vertInds);
-        Triangle(size_t ind, const std::array<glm::ivec2, 3>& screenSpaceVerts, const std::array<uint32_t, 3>& vertInds);
+        Triangle(size_t ind, std::array<size_t,3>&& vertInds, std::array<glm::vec2,3>&& verts);
+        Triangle(size_t ind, std::array<size_t,3>& vertInds, std::array<glm::vec2,3>& verts);
+        Triangle(size_t ind, const std::array<size_t, 3>& vertInds);
+        Triangle() = default;
+        Triangle(Triangle &&) = default;
+        Triangle(const Triangle &) = default;
+        Triangle& operator=(Triangle &&) = default;
+        Triangle& operator=(const Triangle &) = default;
+
+        const std::array<size_t, 3>& getVertInds() const;
+        inline float getDenom() const {return denom;};
+        glm::vec3 getBarycentric(const glm::vec2& p);
+        bool isClipped() const { return clipped; };
+        void Clip() { clipped = true; };
+        
+        size_t getId() const { return id; } 
+
+        bool isBackFace() const;
     private:
-        size_t id;
-        std::array<glm::ivec2, 3> screenSpaceVerts;
-        std::array<uint32_t, 3> vertInds;
+        size_t id{};
+        float d00;
+        float d01;
+        float d11;
+        float denom;
+        bool clipped = false;
+        glm::vec3 bary{0.0f};
+        std::array<glm::vec2, 3> verts{};
+        std::array<size_t, 3> vertInds{};
     };
 }
 

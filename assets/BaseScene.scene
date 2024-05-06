@@ -1,7 +1,9 @@
+
 mesh
 {
-    file Chariot.obj
+    file drakonik/source/MaterialSeparated.obj
 }
+
 
 light 
 {
@@ -11,7 +13,7 @@ light
 
 camera
 {
-    pos -2.0, 0.0, 0.0
+    pos -10.0, 0.0, 0.0
     front 1.0, 0.0, 0.0
     fov 90.0
 }

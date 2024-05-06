@@ -16,7 +16,7 @@ namespace Viewer
 		glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 6);
 		glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
-		window = glfwCreateWindow(width, height, "CPU Rasterizer", nullptr, nullptr);
+		window = glfwCreateWindow(width, height, "Window", nullptr, nullptr);
 
 		if (window == nullptr)
 		{
@@ -37,7 +37,6 @@ namespace Viewer
 		glfwSetMouseButtonCallback(window, GlfwMouseButtonCallback);
 		glfwSetScrollCallback(window, GlfwScrollCallback);
 		glfwSetWindowSizeCallback(window, GlfwResizeCallBack);
-        glViewport(0, 0, width, height);
     }
 
     Window::~Window()
@@ -48,7 +47,9 @@ namespace Viewer
 
     void Window::GlfwResizeCallBack(GLFWwindow* window, int width, int height)
     {
-        glViewport(0, 0, width, height);
+		auto* const this_ = static_cast<Window*>(glfwGetWindowUserPointer(window));
+		for (auto& callback : this_->onResize)
+			callback(width, height);
     }
 
     void Window::GlfwErrorCallback(const int error, const char* const description)
@@ -59,6 +60,9 @@ namespace Viewer
 	void Window::GlfwKeyCallback(GLFWwindow* window, const int key, const int scancode, const int action,
 	                             const int mods)
 	{
+		if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
+			glfwSetWindowShouldClose(window, true);
+
 		auto* const this_ = static_cast<Window*>(glfwGetWindowUserPointer(window));
 		for (auto& callback : this_->onKeyChanged)
 			callback(key, scancode, action, mods);
@@ -85,24 +89,28 @@ namespace Viewer
 			callback(xoffset, yoffset);
 	}
 
-    void Window::AddOnKeyChanged(std::function<void(int key, int scancode, int action, int mods)>&& callback)
+    void Window::addOnKeyChanged(std::function<void(int key, int scancode, int action, int mods)>&& callback)
     {
-        onKeyChanged.push_back(callback);
+        onKeyChanged.emplace_back(std::move(callback));
     }
 
-    void Window::AddOnCursorPositionChanged(std::function<void(double xpos, double ypos)>&& callback)
+    void Window::addOnCursorPositionChanged(std::function<void(double xpos, double ypos)>&& callback)
     {
-        onCursorPositionChanged.push_back(callback);
+        onCursorPositionChanged.emplace_back(std::move(callback));
     }
 
-    void Window::AddOnMouseButtonChanged(std::function<void(int button, int action, int mods)>&& callback)
+    void Window::addOnMouseButtonChanged(std::function<void(int button, int action, int mods)>&& callback)
     {
-        onMouseButtonChanged.push_back(callback);
+        onMouseButtonChanged.emplace_back(std::move(callback));
     }
 
-    void Window::AddOnScrollChanged(std::function<void(double xoffset, double yoffset)>&& callback)
+    void Window::addOnScrollChanged(std::function<void(double xoffset, double yoffset)>&& callback)
     {
-        onScrollChanged.push_back(callback);
+        onScrollChanged.emplace_back(std::move(callback));
     }
 
+    void Window::addOnResize(std::function<void(int width, int height)> &&callback)
+    {
+		onResize.emplace_back(std::move(callback));
+    }
 }

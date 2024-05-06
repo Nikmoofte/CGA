@@ -1,0 +1,56 @@
+newmtl doomslayer_arm_left
+map_Kd body\arms\left\doomslayer_arm_left.png
+map_Ke body\arms\left\doomslayer_arm_left_e.png
+norm body\arms\left\doomslayer_arm_left_n.png
+map_MRAO body\arms\left\doomslayer_arm_left_mrao.png
+
+newmtl doomslayer_arm_right
+map_Kd body\arms\right\doomslayer_arm_right.png
+map_Ke body\arms\right\doomslayer_arm_right_e.png
+norm body\arms\right\doomslayer_arm_right_n.png
+map_MRAO body\arms\right\doomslayer_arm_right_mrao.png
+
+newmtl equipmentlauncher_mods_base
+map_Kd weapons\launcher\parts\base\equipmentlauncher_mods_base.png
+map_Ke weapons\launcher\parts\base\equipmentlauncher_mods_base_e.png
+norm weapons\launcher\parts\base\equipmentlauncher_mods_base_n.png
+map_MRAO weapons\launcher\parts\base\equipmentlauncher_mods_base_mrao.png
+
+newmtl doomslayer_1p_knife
+map_Kd weapons\knife\doomslayer_1p_knife.png
+map_Ke weapons\knife\doomslayer_1p_knife_bloom.png
+norm weapons\knife\doomslayer_1p_knife_local.png
+map_MRAO weapons\knife\doomslayer_1p_knife_mrao.png
+
+newmtl doomslayer_helmet_visor
+Kd 0.098039 0.152941 0.098039
+norm body\helmet\visor\doomslayer_helmet_visor_local.png
+map_MRAO body\helmet\visor\doomslayer_helmet_visor_mrao.png
+
+newmtl doomslayer_torso
+map_Kd body\torso\doomslayer_torso.png
+map_Ke body\torso\doomslayer_torso_e.png
+norm body\torso\doomslayer_torso_n.png
+map_MRAO body\torso\doomslayer_torso_mrao.png
+
+newmtl doomslayer_legs
+map_Kd body\legs\doomslayer_legs.png
+norm body\legs\doomslayer_legs_n.png
+map_MRAO body\legs\doomslayer_legs_mrao.png
+
+newmtl equipmentlauncher_mods
+map_Kd weapons\launcher\parts\equipmentlauncher_mods.png
+norm weapons\launcher\parts\equipmentlauncher_mods_n.png
+map_MRAO weapons\launcher\parts\equipmentlauncher_mods_mrao.png
+
+newmtl doomslayer_launcher
+map_Kd weapons\launcher\doomslayer_launcher.png
+map_Ke weapons\launcher\doomslayer_launcher_e.png
+norm weapons\launcher\doomslayer_launcher_n.png
+map_MRAO weapons\launcher\doomslayer_launcher_mrao.png
+
+newmtl doomslayer_helmet
+map_Kd body\helmet\doomslayer_helmet.png
+map_Ke body\helmet\doomslayer_helmet_bloom.png
+norm body\helmet\doomslayer_helmet_local.png
+map_MRAO body\helmet\doomslayer_helmet_mrao.png

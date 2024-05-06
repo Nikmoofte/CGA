@@ -14,7 +14,7 @@ public:
 
 		return path;
 	}
-	static Path& Get()
+	static Path& get()
 	{
 		static Path path;
 		return path;
@@ -25,11 +25,11 @@ private:
 	Path() 
 	{
 		auto root = std::filesystem::current_path();
-		auto current = root.filename();
-		while (current.string().contains("build"))
+		auto current = root.string();
+		while (current.contains("build"))
 		{
 			root = root.parent_path();
-			current = root.filename();
+			current = root.string();
 		}
 
 		this->root = root;

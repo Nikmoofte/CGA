@@ -20,12 +20,14 @@ namespace Viewer
             void pollEvents() const { glfwPollEvents(); }
             void swapBuffers() const { glfwSwapBuffers(window); }
             void setTitle(const char* title) const { glfwSetWindowTitle(window, title); }
+            void setWindowShouldClose(bool should) {glfwSetWindowShouldClose(window, should);}
 
-            void AddOnKeyChanged(std::function<void(int key, int scancode, int action, int mods)>&& callback);
-            void AddOnCursorPositionChanged(std::function<void(double xpos, double ypos)>&& callback);
-            void AddOnMouseButtonChanged(std::function<void(int button, int action, int mods)>&& callback);
-            void AddOnScrollChanged(std::function<void(double xoffset, double yoffset)>&& callback);
-
+            void addOnKeyChanged(std::function<void(int key, int scancode, int action, int mods)>&& callback);
+            void addOnCursorPositionChanged(std::function<void(double xpos, double ypos)>&& callback);
+            void addOnMouseButtonChanged(std::function<void(int button, int action, int mods)>&& callback);
+            void addOnScrollChanged(std::function<void(double xoffset, double yoffset)>&& callback);
+            void addOnResize(std::function<void(int width, int height)>&& callback);
+            
         private:
             static void GlfwErrorCallback(int error, const char* description);
             static void GlfwKeyCallback(GLFWwindow* window, int key, int scancode, int action, int mods);
@@ -38,6 +40,7 @@ namespace Viewer
             std::vector<std::function<void(double xpos, double ypos)>> onCursorPositionChanged;
             std::vector<std::function<void(int button, int action, int mods)>> onMouseButtonChanged;
             std::vector<std::function<void(double xoffset, double yoffset)>> onScrollChanged;
+            std::vector<std::function<void(int width, int height)>> onResize;
 
             GLFWwindow* window{ nullptr };
             const int width{};
