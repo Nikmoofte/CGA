@@ -23,6 +23,8 @@ namespace Engine
         glm::vec3 getBarycentric(const glm::vec2& p);
         bool isClipped() const { return clipped; };
         void Clip() { clipped = true; };
+        
+        size_t getId() const { return id; } 
 
         bool isBackFace() const;
     private:
@@ -32,6 +34,7 @@ namespace Engine
         float d11;
         float denom;
         bool clipped = false;
+        glm::vec3 bary{0.0f};
         std::array<glm::vec2, 3> verts{};
         std::array<size_t, 3> vertInds{};
     };

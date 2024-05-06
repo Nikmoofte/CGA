@@ -4,12 +4,11 @@ project(WinProj)
 set(ClassesDir src/classes/)
 set(AssetsDir src/assets/)
 set(Dependencies deps/)
-set(FeatureDetector ${Dependencies}featureDetector/src/)
 set(ImguiPath ${Dependencies}imgui/)
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -mavx512bw -mavx512cd -mavx512dq")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -mavx2")
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3")
+# set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3")
 
 set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -19,7 +18,7 @@ set(Classes
     ${ClassesDir}Assets/Light/Light.cpp
     ${ClassesDir}Assets/Vertex.hpp
     ${ClassesDir}Assets/Color4b.hpp
-    
+    ${ClassesDir}Assets/Texture/Texture.cpp
     
     ${ClassesDir}Engine/Renderer/Renderer.cpp
     ${ClassesDir}Engine/Scene/Scene.cpp
@@ -50,19 +49,23 @@ set(IMGUI_SRCS
     ${ImguiPath}backends/imgui_impl_glfw.cpp
 )
 add_executable(main src/main.cpp ${Classes} ${IMGUI_SRCS})
+target_precompile_headers(main
+  PUBLIC
+    include/pch.hpp
+)
 
 
 add_subdirectory(deps/glm)
 add_subdirectory(deps/glad)
 add_subdirectory(deps/glfw)
-add_subdirectory(deps/featureDetector)
 add_subdirectory(deps/tinyobjloader)
+add_subdirectory(deps/stb_image)
 target_link_libraries(main PUBLIC 
-                            FeatureDetector
                             glm
                             glfw
                             opengl32
                             tinyobjloader
+                            stb_image
                             glad
 )
 
@@ -72,7 +75,7 @@ target_include_directories(main PUBLIC ${ClassesDir})
 target_include_directories(main PUBLIC ${AssetsDir})
 target_include_directories(main PUBLIC ${ImguiPath})
 target_include_directories(main PUBLIC include)
-target_include_directories(main PUBLIC ${FeatureDetector})
-target_include_directories(main PUBLIC ${Dependencies}thread-pool/include)
+target_include_directories(main PUBLIC deps/stb_image/include)
+
 #target_include_directories(main PUBLIC ${Dependencies}tinyobjloader)
 

@@ -18,14 +18,20 @@ namespace Engine
             {
                 return buffer[pos.y * screenDimentions.x + pos.x];
             }
-            void set(glm::ivec2 pos, Assets::Color4b& val)
+            Assets::Color4b& get(glm::ivec2 pos)
+            {
+                return buffer[pos.y * screenDimentions.x + pos.x];
+            }
+            void set(glm::ivec2 pos, Assets::Color4b val)
             {
                 buffer[pos.y * screenDimentions.x + pos.x] = val;
             }
-            void set(glm::ivec2 pos, Assets::Color4b&& val)
+            void set(glm::ivec2 pos, int triangleIndex)
             {
-                buffer[pos.y * screenDimentions.x + pos.x] = std::move(val);
+                //well i need to store int:/ sizeof(int) == sizeof(Assets::Color4b)
+                buffer[pos.y * screenDimentions.x + pos.x] = *(Assets::Color4b*)&triangleIndex;
             }
+
         private:
             glm::ivec2 screenDimentions{};
         };

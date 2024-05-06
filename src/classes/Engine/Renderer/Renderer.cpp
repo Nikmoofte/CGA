@@ -34,6 +34,7 @@ namespace Engine
         int trianglesCount = scene.getTriangleCount();
         const auto numCores = std::thread::hardware_concurrency();
         coreInterval = trianglesCount / numCores;
+        coreIntervalBuffer = screenDimentions.x * screenDimentions.y / numCores; 
         triangles.resize(trianglesCount);
 
         colorBuffer = std::make_unique<Buffers::ColorBuffer>(screenDimentions);
@@ -49,9 +50,9 @@ namespace Engine
         clearBuffers();
 
         vertexShaderStage();
-        rasterisationStage();
         triangleAssing();
         clippingStage();       
+        rasterisationStage();
         fragmentShaderStage();
         
     }
@@ -82,14 +83,8 @@ namespace Engine
     }
     void Renderer::rasterisationStage()
     {
-
-    }
-    void Renderer::fragmentShaderStage()
-    {
         using namespace glm;
-        auto& lights = scene.getLights();
-        const auto& cam = scene.getCamera();
-        std::for_each(std::execution::par, triangles.begin(), triangles.end(), [&lights, &cam, this](Triangle& triangle)
+        std::for_each(std::execution::par, triangles.begin(), triangles.end(), [this](Triangle& triangle)
         {
             if(!triangle.isClipped())
             {   
@@ -116,38 +111,73 @@ namespace Engine
                             {
                                 depthBuffer->set({x, y}, z);
 
-                                vec3 FragPos = bary.x * v0.position + bary.y * v1.position + bary.z * v2.position;
-                                vec3 Normal = normalize(bary.x * v0.normal + bary.y * v1.normal + bary.z * v2.normal);
-                                float ambientStrength = Settings::Get().ambientStrength;
-                                float specularStrength = Settings::Get().specularStrength;
-                                vec3 ambient{}, diffuse{}, specular{};
-                                for(auto& light : lights)
-                                {
-                                    ambient += ambientStrength * light.color;
-
-                                    // diffuse 
-                                    vec3 lightDir = normalize(light.pos - FragPos);
-                                    float diff = std::max(dot(Normal, lightDir), 0.0f);
-                                    diffuse += diff * light.color;
-
-                                    // specular
-                                    vec3 viewDir = normalize(cam.getPos() - FragPos);
-                                    vec3 reflectDir = reflect(-lightDir, Normal);  
-                                    float spec = pow(std::max(dot(viewDir, reflectDir), 0.0f), 32);
-                                    specular += specularStrength * spec * light.color;  
-                                }
-                                vec3 col{1.0f};
-                                col *= ambient + diffuse + specular;
-                                Assets::Color4b color{};
-                                //color.fromVec({z, 0.0f, 0.0f, 1.0f});
-                                color.fromVec({col, 1.0f});
-                                colorBuffer->set({x, y}, color);
+                                colorBuffer->set({x, y}, triangle.getId());
                             }
                         }
                     }
                 }
             }
 
+        }
+        );
+    }
+    void Renderer::fragmentShaderStage()
+    {
+        using namespace glm;
+        auto& lights = scene.getLights();
+        const auto& cam = scene.getCamera();
+        int width = cam.getScreenDimentions().x;
+        float invWidth = (float)1 / width;
+        std::for_each(std::execution::par, coresID.begin(), coresID.end(), [this, &lights, &cam, &invWidth, width](int id)
+        {
+            int startInd = id * coreIntervalBuffer;
+            int endInd = (id + 1) * coreIntervalBuffer;
+            for(int i = startInd; i < endInd; ++i)
+            {
+                int y = invWidth * i;
+                int x = i - y * width;
+                Assets::Color4b& pixel = colorBuffer->get({x, y});
+                int val = *(int*)&pixel;
+                if(val != 0)
+                {
+                    auto& triangle = triangles[val];
+                    auto& triangleIndicies = triangle.getVertInds();
+                    auto& v0 = projectedVertices[triangleIndicies[0]];    
+                    auto& v1 = projectedVertices[triangleIndicies[1]];
+                    auto& v2 = projectedVertices[triangleIndicies[2]];
+                    auto bary = triangle.getBarycentric({x, y});
+
+
+                    vec3 FragPos = bary.x * v0.position + bary.y * v1.position + bary.z * v2.position;
+                    vec3 Normal = normalize(bary.x * v0.normal + bary.y * v1.normal + bary.z * v2.normal);
+                    
+                    float ambientStrength = Settings::Get().ambientStrength;
+                    float specularStrength = Settings::Get().specularStrength;
+                    
+                    vec3 ambient{}, diffuse{}, specular{};
+                    for(auto& light : lights)
+                    {
+                        ambient += ambientStrength * light.color;
+
+                        // diffuse 
+                        vec3 lightDir = normalize(light.pos - FragPos);
+                        float diff = std::max(dot(Normal, lightDir), 0.0f);
+                        diffuse += diff * light.color;
+
+                        // specular
+                        vec3 viewDir = normalize(cam.getPos() - FragPos);
+                        vec3 reflectDir = reflect(-lightDir, Normal);  
+                        float spec = pow(std::max(dot(viewDir, reflectDir), 0.0f), 32);
+                        specular += specularStrength * spec * light.color;  
+                    }
+                    vec3 col{1.0f};
+                    col *= ambient + diffuse + specular;
+                    Assets::Color4b color{};
+                    //color.fromVec({z, 0.0f, 0.0f, 1.0f});
+                    color.fromVec({col, 1.0f});
+                    colorBuffer->set({x, y}, color);
+                }
+            }
         }
         );
     }

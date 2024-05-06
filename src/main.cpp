@@ -2,7 +2,6 @@
 #include "path.hpp"
 #include "Viewer/App/App.hpp"
 
-#define GLM_FORCE_SWIZZLE
 #include <glm/glm.hpp>
 
 int main(int argc, char* argv[])

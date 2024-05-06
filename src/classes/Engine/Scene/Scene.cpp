@@ -7,6 +7,8 @@
 #include "Engine/Triangle/Triangle.hpp"
 #include "Engine/Camera/Camera.hpp"
 
+#include "tiny_obj_loader.h"
+
 #include "config.hpp"
 
 #include "glm/glm.hpp"
@@ -33,8 +35,9 @@ namespace Engine
             OUTPUT_IF_DEBUG_(filepathString);
             id = meshes.size();
             meshMap[file] = id;
-            meshes.push_back(std::make_unique<Assets::Mesh>(filepathString, std::move(model)));
+            meshes.push_back(std::make_unique<Assets::Mesh>(filepathString, *this));
         }
+        meshInstances.emplace_back(id, std::move(model));
 
         return id;
     }
@@ -42,6 +45,11 @@ namespace Engine
     {
         camera = std::make_unique<Camera>(pos, front, glm::radians(fov), screenDimentions);
         return 0;
+    }
+
+    int Scene::addMaterial(const tinyobj::material_t &material)
+    {
+        
     }
 
     Camera &Scene::getCamera()
@@ -76,16 +84,17 @@ namespace Engine
         size_t offset = 0;
         size_t id = 0;
 
-        for(auto& mesh : meshes)
+        for(auto& meshInstance : meshInstances)
         {
-            auto& model = mesh->getModelMat();
+            auto& mesh = meshes[meshInstance.meshId];
+            auto& model = meshInstance.model;
             auto modelTransInv = glm::transpose(glm::inverse(model));
-            for(auto& vert : mesh->getVertices())
+            for(auto vert : mesh->getVertices())
             {
                 vert.position = model * glm::vec4(vert.position, 1.f);
 				vert.normal = glm::normalize(modelTransInv * glm::vec4(vert.normal, 1.f));
 				vert.id = id++;
-				allVertices.push_back(vert);
+				allVertices.emplace_back(std::move(vert));
             }
             for(auto& index : mesh->getIndecies())
             {

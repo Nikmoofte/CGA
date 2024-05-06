@@ -135,8 +135,9 @@ namespace Viewer
             const double fFPS = (double)currentFrame / delta.count();
             start = end;
             currentFrame = 0;
-            std::string title = "OpenGL - " + std::to_string(fFPS) + " fps";
-            window->setTitle(title.c_str());
+            std::stringstream title;
+            title << "Running at " << std::to_string(fFPS) << " fps. " ;
+            window->setTitle(title.str().c_str());
         }
     }
 

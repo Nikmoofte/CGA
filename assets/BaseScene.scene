@@ -1,7 +1,9 @@
+
 mesh
 {
-    file Doom Slayer/doomslayer.obj
+    file drakonik/source/MaterialSeparated.obj
 }
+
 
 light 
 {

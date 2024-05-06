@@ -8,10 +8,15 @@
 #include "Loader/Loader.hpp"
 #include "Assets/Vertex.hpp"
 #include "Assets/Light/Light.hpp"
+#include "Assets/MeshInstance.hpp"
 
 namespace Assets
 {
     class Mesh;
+}
+namespace tinyobj
+{
+    class material_t;
 }
 
 namespace Engine
@@ -24,6 +29,8 @@ namespace Engine
         int addMesh(const std::string& filename, glm::mat4&& model);
 		int addLight(const glm::vec3 &pos, const glm::vec3 &color);
         int addCamera(const glm::vec3& pos, const glm::vec3 &front, float fov, glm::ivec2 screenDimentions);
+        int addMaterial(const tinyobj::material_t& material);
+
 
         class Camera& getCamera();
         const Camera& getCamera() const;
@@ -43,6 +50,7 @@ namespace Engine
 
         std::unordered_map<std::string, int> meshMap;
 
+        std::vector<Assets::MeshInstance> meshInstances;
         std::vector<std::unique_ptr<Assets::Mesh>> meshes;
         std::unique_ptr<Camera> camera;
 

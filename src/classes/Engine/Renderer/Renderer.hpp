@@ -39,6 +39,7 @@ namespace Engine
 
         std::vector<Triangle> triangles;
         size_t coreInterval;
+        size_t coreIntervalBuffer;
         std::vector<int> coresID;
 
         std::vector<Assets::Vertex> projectedVertices;
