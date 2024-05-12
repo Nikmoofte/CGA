@@ -1,6 +1,7 @@
 #include "Texture.hpp"
 
 #include "stb_image.h"
+#include <glm/glm.hpp>
 
 namespace Assets
 {
@@ -30,9 +31,7 @@ namespace Assets
 		width = texture.width;
 		channels = texture.channels;
 		imageSize = texture.imageSize;
-		pixels = texture.pixels;
-
-		texture.pixels.clear();
+		pixels = std::move(texture.pixels);
 	}
 
 	Texture& Texture::operator=(Texture&& texture) noexcept
@@ -44,19 +43,40 @@ namespace Assets
 			width = texture.width;
 			channels = texture.channels;
 			imageSize = texture.imageSize;
-			pixels = texture.pixels;
-
-			texture.pixels.clear();
+			pixels = std::move(texture.pixels);
 		}
 
 		return *this;
 	}
 
-	Texture::~Texture() = default;
 
-	void Texture::Wait()
+	void Texture::Wait() const
 	{
 		if (loader.valid())
-			loader.get();
+			loader.wait();
 	}
+
+    glm::vec4 Texture::GetPixel(glm::vec2 texCoords) const
+    {
+		Wait();
+		while(texCoords.x < 0)
+			texCoords.x += 1.0;
+		while(texCoords.y < 0)
+			texCoords.y += 1.0;
+		while(texCoords.x > 1)
+			texCoords.x -= 1.0;
+		while(texCoords.y > 1)
+			texCoords.y -= 1.0;
+
+		int x = texCoords.x * width;
+		int y = texCoords.y * height;
+
+		int index = (y * width + x) * 4;
+
+		return { pixels[index + 0], pixels[index + 1], pixels[index + 2], pixels[index + 3] };
+    }
+    Texture::Texture()
+    {
+
+    }
 }

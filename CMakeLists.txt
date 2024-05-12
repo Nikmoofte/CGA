@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.20)
-project(WinProj)
+project(WinProj CXX)
 
 set(ClassesDir src/classes/)
 set(AssetsDir src/assets/)
@@ -8,7 +8,10 @@ set(ImguiPath ${Dependencies}imgui/)
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -mavx512bw -mavx512cd -mavx512dq")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -mavx2")
-# set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3")
+# set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /arch:AVX512")
+# set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /arch:AVX2")
+# set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /O2")
 
 set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -19,6 +22,7 @@ set(Classes
     ${ClassesDir}Assets/Vertex.hpp
     ${ClassesDir}Assets/Color4b.hpp
     ${ClassesDir}Assets/Texture/Texture.cpp
+    ${ClassesDir}Assets/Material/Material.cpp
     
     ${ClassesDir}Engine/Renderer/Renderer.cpp
     ${ClassesDir}Engine/Scene/Scene.cpp
@@ -48,7 +52,7 @@ set(IMGUI_SRCS
     ${ImguiPath}backends/imgui_impl_opengl3.cpp
     ${ImguiPath}backends/imgui_impl_glfw.cpp
 )
-add_executable(main src/main.cpp ${Classes} ${IMGUI_SRCS})
+add_executable(main src/main.cpp ${IMGUI_SRCS} ${Classes})
 target_precompile_headers(main
   PUBLIC
     include/pch.hpp

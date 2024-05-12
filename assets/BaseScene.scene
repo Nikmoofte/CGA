@@ -1,7 +1,12 @@
 
+#mesh
+#{
+#    file Doom Slayer/doomslayer.obj
+##    pos 2.0 0.0 2.0
+#}
 mesh
 {
-    file drakonik/source/MaterialSeparated.obj
+    file drakonik/source/MaterialSeparatedPBRExt.obj
 }
 
 
@@ -13,7 +18,7 @@ light
 
 camera
 {
-    pos -10.0, 0.0, 0.0
+    pos -11.0, 0.0, 0.0
     front 1.0, 0.0, 0.0
     fov 90.0
 }

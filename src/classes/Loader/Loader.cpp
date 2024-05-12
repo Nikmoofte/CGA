@@ -29,6 +29,9 @@ namespace Loader
             std::string line;
             while(std::getline(file, line))
             {
+                if(line[0] == '#')
+                    continue;
+
                 //Mesh parce
                 if(line.contains("mesh"))
                 {

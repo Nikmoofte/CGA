@@ -28,11 +28,11 @@ namespace Assets
 		std::vector<uint32_t>& getIndecies() { return indices; }
 		uint32_t getIndeciesSize() const { return indices.size(); }
 		
+		//Last index in indicies for    material
+		std::vector<std::pair<uint32_t, uint32_t>> lastMaterialIndex;
 	private:
 		std::vector<Vertex> vertices;
 		std::vector<uint32_t> indices;
-		//Last index in indicies for material[i], where i is an index in this array
-		std::vector<uint32_t> lastMaterialIndex;
 		std::future<void> loader{};
 
 		void Load(const std::string& path, Engine::Scene& scene);

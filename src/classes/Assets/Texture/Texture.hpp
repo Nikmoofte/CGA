@@ -5,6 +5,9 @@
 #include <vector>
 #include <future>
 
+#include <glm/vec2.hpp>
+#include <glm/vec4.hpp>
+
 namespace Assets
 {
     class Texture
@@ -18,16 +21,18 @@ namespace Assets
 		Texture& operator =(Texture&&) noexcept;
 		Texture& operator =(const Texture&) = delete;
 
-		~Texture();
+		~Texture() = default;
 
-		void Wait();
+		void Wait() const;
 
 		int GetWidth() const { return width; };
 		int GetHeight() const { return height; };
 		int GetImageSize() const { return imageSize; };
 		int GetChannels() const { return channels; };
+		virtual glm::vec4 GetPixel(glm::vec2 texCoords) const;
 		const std::vector<float>& GetPixels() const { return pixels; };
-
+	protected:
+		Texture();
 	private:
 		std::future<void> loader{};
 		std::string path;

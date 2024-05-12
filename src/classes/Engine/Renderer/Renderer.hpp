@@ -20,7 +20,7 @@ namespace Engine
     class Renderer
     {
     public:
-        Renderer(const class Scene& scene);
+        Renderer(class Scene& scene);
 
         void clearBuffers();
         void resetBuffers();
@@ -43,7 +43,7 @@ namespace Engine
         std::vector<int> coresID;
 
         std::vector<Assets::Vertex> projectedVertices;
-        const Scene& scene;
+        Scene& scene;
     };
 
 

@@ -1,5 +1,8 @@
 #include "Renderer.hpp"
 
+#include "Assets/Material/Material.hpp"
+#include "Assets/Texture/Texture.hpp"
+
 #include "Engine/Scene/Scene.hpp"
 #include "Engine/Buffers/ColorBuffer/ColorBuffer.hpp"
 #include "Engine/Buffers/DepthBuffer/DepthBuffer.hpp"
@@ -13,7 +16,7 @@
 
 namespace Engine
 {
-    Renderer::Renderer(const Scene &scene) : 
+    Renderer::Renderer(Scene &scene) : 
     scene(scene)
     {
         coresID.resize(std::thread::hardware_concurrency());
@@ -76,7 +79,7 @@ namespace Engine
         auto& cam = scene.getCamera();
         std::for_each(std::execution::par, triangles.begin(), triangles.end(), [&cam, this](Triangle& triangle)
         {
-            if(triangle.isBackFace())
+            if(triangle.isBackFace(cam.getPos()))
                 triangle.Clip();
         }   
         );
@@ -121,6 +124,20 @@ namespace Engine
         }
         );
     }
+
+    inline glm::vec3 CalcBumpedNormal(const glm::vec3& norm, const glm::vec3& tangent, glm::vec3 BumpMapNormal)
+    {
+        glm::vec3 Normal = glm::normalize(norm);
+        glm::vec3 Tangent = glm::normalize(tangent);
+        Tangent = glm::normalize(Tangent - glm::dot(Tangent, Normal) * Normal);
+        glm::vec3 Bitangent = glm::cross(Tangent, Normal);
+        glm::mat3 TBN = glm::mat3(Tangent, Bitangent, Normal);
+        BumpMapNormal = 2.0f * BumpMapNormal - 1.0f;
+        glm::vec3 NewNormal;
+        NewNormal = TBN * BumpMapNormal;
+        NewNormal = glm::normalize(NewNormal);
+        return NewNormal;
+    }
     void Renderer::fragmentShaderStage()
     {
         using namespace glm;
@@ -141,20 +158,26 @@ namespace Engine
                 if(val != 0)
                 {
                     auto& triangle = triangles[val];
+                    int materialId = triangle.getMaterialId();
+                    auto& material = scene.getMaterial(materialId);
                     auto& triangleIndicies = triangle.getVertInds();
                     auto& v0 = projectedVertices[triangleIndicies[0]];    
                     auto& v1 = projectedVertices[triangleIndicies[1]];
                     auto& v2 = projectedVertices[triangleIndicies[2]];
                     auto bary = triangle.getBarycentric({x, y});
 
-
                     vec3 FragPos = bary.x * v0.position + bary.y * v1.position + bary.z * v2.position;
-                    vec3 Normal = normalize(bary.x * v0.normal + bary.y * v1.normal + bary.z * v2.normal);
-                    
+                    vec2 texCoords = bary.x * v0.texCoords + bary.y * v1.texCoords + bary.z * v2.texCoords;
+                    vec3 Normal = bary.x * v0.normal + bary.y * v1.normal + bary.z * v2.normal;
+                    vec3 Tangent = bary.x * v0.tangent + bary.y * v1.tangent + bary.z * v2.tangent;
+                    auto& bumpTex = scene.getTexture(material->getBumpTextureName());
+                    Normal = CalcBumpedNormal(Normal, Tangent, bumpTex->GetPixel(texCoords));
+                    //Actual shader code
                     float ambientStrength = Settings::Get().ambientStrength;
                     float specularStrength = Settings::Get().specularStrength;
                     
                     vec3 ambient{}, diffuse{}, specular{};
+                    auto& diffTex = scene.getTexture(material->getDiffuseTextureName());
                     for(auto& light : lights)
                     {
                         ambient += ambientStrength * light.color;
@@ -171,10 +194,11 @@ namespace Engine
                         specular += specularStrength * spec * light.color;  
                     }
                     vec3 col{1.0f};
-                    col *= ambient + diffuse + specular;
+                    col *= ambient + diffuse  + specular;
                     Assets::Color4b color{};
                     //color.fromVec({z, 0.0f, 0.0f, 1.0f});
-                    color.fromVec({col, 1.0f});
+                    glm::vec3 coltemp = diffTex->GetPixel(texCoords);
+                    color.fromVec({col * glm::vec3(coltemp.b, coltemp.r, coltemp.g), 1.0f});
                     colorBuffer->set({x, y}, color);
                 }
             }
@@ -196,11 +220,12 @@ namespace Engine
                     i, 
                     {indicies[index + 0], indicies[index + 1], indicies[index + 2]}, 
                     {
-                        projectedVertices[indicies[index + 0]].projectedPosition, 
-                        projectedVertices[indicies[index + 1]].projectedPosition, 
-                        projectedVertices[indicies[index + 2]].projectedPosition
+                        projectedVertices[indicies[index + 0]], 
+                        projectedVertices[indicies[index + 1]], 
+                        projectedVertices[indicies[index + 2]]
                     }
                 );
+                triangles[i].setMaterialId(scene.getMaterialId(index));
             }            
         });
     }
