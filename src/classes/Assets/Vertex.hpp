@@ -20,10 +20,13 @@ namespace Assets
 		glm::vec2 texCoords{};
 		glm::vec3 tangent{};
 
+		float invW;
+
 		void perspectiveDivide()
 		{
-			auto invW = 1.0f / projectedPosition.w;
+			invW = 1.0f / projectedPosition.w;
 			projectedPosition *= invW;
+			texCoords *= invW;
 		}
 
 		bool operator==(const Vertex& other) const

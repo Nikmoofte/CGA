@@ -1,12 +1,22 @@
 
 #mesh
-#{
-#    file Doom Slayer/doomslayer.obj
-##    pos 2.0 0.0 2.0
-#}
+{
+    file Doom Slayer/doomslayer.obj
+    pos 2.0 0.0 2.0
+}
 mesh
 {
     file drakonik/source/MaterialSeparatedPBRExt.obj
+}
+#mesh
+{
+    file chess board/source/untitled.obj
+    scale 4.0 4.0 4.0
+}
+
+#mesh
+{
+    file Plane.obj
 }
 
 

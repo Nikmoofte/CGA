@@ -19,9 +19,7 @@ namespace Engine
     Renderer::Renderer(Scene &scene) : 
     scene(scene)
     {
-        coresID.resize(std::thread::hardware_concurrency());
-        for(int i = 0; i < coresID.size(); i++)
-            coresID[i] = i;
+
         resetBuffers();
     }
 
@@ -35,7 +33,10 @@ namespace Engine
         glm::ivec2 screenDimentions = scene.getCamera().getScreenDimentions();
         projectedVertices.resize(scene.getVertecies().size());
         int trianglesCount = scene.getTriangleCount();
-        const auto numCores = std::thread::hardware_concurrency();
+        const auto numCores = std::min(unsigned(trianglesCount), std::thread::hardware_concurrency());
+        coresID.resize(numCores);
+        for(int i = 0; i < coresID.size(); i++)
+            coresID[i] = i;
         coreInterval = trianglesCount / numCores;
         coreIntervalBuffer = screenDimentions.x * screenDimentions.y / numCores; 
         triangles.resize(trianglesCount);
@@ -79,8 +80,8 @@ namespace Engine
         auto& cam = scene.getCamera();
         std::for_each(std::execution::par, triangles.begin(), triangles.end(), [&cam, this](Triangle& triangle)
         {
-            if(triangle.isBackFace(cam.getPos()))
-                triangle.Clip();
+            // if(triangle.isBackFace(cam.getPos()))
+            //     triangle.Clip();
         }   
         );
     }
@@ -102,9 +103,9 @@ namespace Engine
                 ivec2 min = glm::max({0, 0}, glm::min(Settings::Get().windowSize - 1, glm::ivec2{glm::floor(bbmin)}));
                 ivec2 max = glm::max({0, 0}, glm::min(Settings::Get().windowSize - 1, glm::ivec2{glm::ceil(bbmax)}));
 
-                for(int y = min.y; y < max.y; ++y)
+                for(int y = min.y; y <= max.y; ++y)
                 {
-                    for(int x = min.x; x < max.x; ++x)
+                    for(int x = min.x; x <= max.x; ++x)
                     {
                         glm::vec3 bary = triangle.getBarycentric({x, y});
                         if(bary.x > 0.0f && bary.y > 0.0f && bary.z > 0.0f)
@@ -157,7 +158,7 @@ namespace Engine
                 int val = *(int*)&pixel;
                 if(val != 0)
                 {
-                    auto& triangle = triangles[val];
+                    auto& triangle = triangles[val - 1];
                     int materialId = triangle.getMaterialId();
                     auto& material = scene.getMaterial(materialId);
                     auto& triangleIndicies = triangle.getVertInds();
@@ -167,14 +168,36 @@ namespace Engine
                     auto bary = triangle.getBarycentric({x, y});
 
                     vec3 FragPos = bary.x * v0.position + bary.y * v1.position + bary.z * v2.position;
-                    vec2 texCoords = bary.x * v0.texCoords + bary.y * v1.texCoords + bary.z * v2.texCoords;
-                    vec3 Normal = bary.x * v0.normal + bary.y * v1.normal + bary.z * v2.normal;
+                    float invW =  1 / glm::dot(bary, vec3(v0.invW, v1.invW, v2.invW));
+                    vec2 texCoords = (bary.x * v0.texCoords + bary.y * v1.texCoords + bary.z * v2.texCoords) * invW;
+                    auto& normalTexName = material->getNormalTextureName();
+                    vec3 Normal;
+                    if(normalTexName.empty())
+                        Normal = bary.x * v0.normal + bary.y * v1.normal + bary.z * v2.normal;
+                    else
+                        Normal = glm::normalize (scene.getTexture(normalTexName)->GetPixel(texCoords));
                     vec3 Tangent = bary.x * v0.tangent + bary.y * v1.tangent + bary.z * v2.tangent;
-                    auto& bumpTex = scene.getTexture(material->getBumpTextureName());
-                    Normal = CalcBumpedNormal(Normal, Tangent, bumpTex->GetPixel(texCoords));
+                    auto& bumpTextName = material->getBumpTextureName();
+                    if(!bumpTextName.empty())
+                    {
+                        auto& bumpTex = scene.getTexture(bumpTextName);
+                        Normal = CalcBumpedNormal(Normal, Tangent, bumpTex->GetPixel(texCoords));
+                    }
                     //Actual shader code
-                    float ambientStrength = Settings::Get().ambientStrength;
-                    float specularStrength = Settings::Get().specularStrength;
+                    float ambientStrength;
+                    float specularStrength;
+
+                    auto& ambientTexName = material->getAmbientTextureName();
+                    if(ambientTexName.empty())
+                        ambientStrength = Settings::Get().ambientStrength;
+                    else
+                        ambientStrength = scene.getTexture(ambientTexName)->GetPixel(texCoords).a;
+                    
+                    auto& specTexName = material->getSpecularTextureName();
+                    if(specTexName.empty())
+                        specularStrength = Settings::Get().specularStrength;
+                    else
+                        specularStrength = scene.getTexture(specTexName)->GetPixel(texCoords).a;
                     
                     vec3 ambient{}, diffuse{}, specular{};
                     auto& diffTex = scene.getTexture(material->getDiffuseTextureName());
@@ -191,6 +214,7 @@ namespace Engine
                         vec3 viewDir = normalize(cam.getPos() - FragPos);
                         vec3 reflectDir = reflect(-lightDir, Normal);  
                         float spec = pow(std::max(dot(viewDir, reflectDir), 0.0f), 32);
+                        
                         specular += specularStrength * spec * light.color;  
                     }
                     vec3 col{1.0f};
@@ -217,7 +241,7 @@ namespace Engine
             {
                 int index = i * 3;
                 triangles[i] = Triangle(
-                    i, 
+                    i + 1, 
                     {indicies[index + 0], indicies[index + 1], indicies[index + 2]}, 
                     {
                         projectedVertices[indicies[index + 0]], 

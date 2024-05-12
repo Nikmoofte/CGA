@@ -34,10 +34,10 @@ namespace Assets
 		std::unordered_map<Vertex, uint32_t> uniqueVertices{};
 		auto& attrib = reader.GetAttrib();
 		auto& materials = reader.GetMaterials();
-		std::queue<size_t> materialIndices;
+		std::vector<int> materialIndices;
 		for(auto & material : materials)
 		{
-			materialIndices.push(scene.addMaterial(material));
+			materialIndices.push_back(scene.addMaterial(material));
 		}
 		for (const auto& shape : reader.GetShapes())
 		{
@@ -78,11 +78,7 @@ namespace Assets
 
 				indices.push_back(uniqueVertices[vertex]);
 			}
-			if(!materialIndices.empty())
-			{
-				lastMaterialIndex.emplace_back(indices.size(), materialIndices.front());
-				materialIndices.pop();	
-			}
+			lastMaterialIndex.emplace_back(indices.size(), materialIndices.empty() ? 0 : materialIndices[shape.mesh.material_ids[0]]);
 		}
 
 		for(int i = 0; i < indices.size(); i += 3)

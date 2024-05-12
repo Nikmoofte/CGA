@@ -23,7 +23,7 @@ namespace Engine
     Scene::Scene()
     {
         //default texture
-        addFlatTexture("default", glm::vec4(1.0f));
+        addTexture("T_Mon_BlackDragon31b_N.png");
 
         //default material
         tinyobj::material_t material;

@@ -59,17 +59,11 @@ namespace Assets
     glm::vec4 Texture::GetPixel(glm::vec2 texCoords) const
     {
 		Wait();
-		while(texCoords.x < 0)
-			texCoords.x += 1.0;
-		while(texCoords.y < 0)
-			texCoords.y += 1.0;
-		while(texCoords.x > 1)
-			texCoords.x -= 1.0;
-		while(texCoords.y > 1)
-			texCoords.y -= 1.0;
 
-		int x = texCoords.x * width;
-		int y = texCoords.y * height;
+		texCoords = texCoords - glm::floor(texCoords);
+
+		int x = texCoords.x * (width - 1);
+		int y = texCoords.y * (height - 1);
 
 		int index = (y * width + x) * 4;
 
